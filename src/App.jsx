@@ -1,46 +1,59 @@
 import React, { useState, useEffect } from 'react'
-import { fetchTodos, addTodo, updateTodo, deleteTodo } from './api'
+
+const STORAGE_KEY = 'todos_local'
 
 export default function App() {
   const [todos, setTodos] = useState([])
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
 
+  // 載入 localStorage 資料
   useEffect(() => {
-    loadTodos()
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      setTodos(JSON.parse(stored))
+    }
   }, [])
 
-  async function loadTodos() {
-    const data = await fetchTodos()
-    setTodos(data)
+  // 寫入 localStorage
+  function saveTodos(newTodos) {
+    setTodos(newTodos)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newTodos))
   }
 
-  async function handleAdd() {
+  function handleAdd() {
     if (!title.trim()) return
-    await addTodo(title, content)
+    const newTodo = {
+      id: Date.now(),
+      title: title.trim(),
+      content: content.trim(),
+      completed: false,
+    }
+    saveTodos([newTodo, ...todos])
     setTitle('')
     setContent('')
-    loadTodos()
   }
 
-  async function handleToggle(id, completed) {
-    await updateTodo(id, !completed)
-    loadTodos()
+  function handleToggle(id) {
+    const newTodos = todos.map(todo =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    )
+    saveTodos(newTodos)
   }
 
-  async function handleDelete(id) {
-    await deleteTodo(id)
-    loadTodos()
+  function handleDelete(id) {
+    const newTodos = todos.filter(todo => todo.id !== id)
+    saveTodos(newTodos)
   }
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>📝 我的代辦清單</h2>
+      <h2 style={styles.title}>📝 我的代辦清單 (純前端版)</h2>
       <div style={styles.inputGroup}>
         <input
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={e => setTitle(e.target.value)}
           placeholder="輸入標題"
           style={styles.input}
           onKeyDown={e => { if (e.key === 'Enter') handleAdd() }}
@@ -49,7 +62,7 @@ export default function App() {
       <div style={styles.inputGroup}>
         <textarea
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={e => setContent(e.target.value)}
           placeholder="輸入內容"
           rows={3}
           style={styles.textarea}
@@ -63,7 +76,7 @@ export default function App() {
             <input
               type="checkbox"
               checked={completed}
-              onChange={() => handleToggle(id, completed)}
+              onChange={() => handleToggle(id)}
               style={styles.checkbox}
             />
             <div style={styles.todoContent}>
