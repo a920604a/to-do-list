@@ -120,6 +120,9 @@ export default function Stats({ todos, tags }) {
         if (customStart && customEnd) {
           start = new Date(customStart);
           end = new Date(customEnd);
+          break;  // 有條件的 break
+        } else {
+          // 這裡補上 break，避免 fallthrough
           break;
         }
       default:
@@ -154,7 +157,6 @@ export default function Stats({ todos, tags }) {
   const bgCard = useColorModeValue('gray.50', 'gray.700');
   const btnActive = useColorModeValue('blue.500', 'blue.300');
   const btnInactive = useColorModeValue('gray.300', 'gray.600');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   return (
     <VStack spacing={8} align="stretch" maxW="900px" mx="auto" px={6} py={6}>
