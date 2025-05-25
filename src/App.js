@@ -7,13 +7,11 @@ import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
-    <Router basename="/to-do-list">
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
-      </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
     </Router>
   );
 }
