@@ -11,7 +11,7 @@ const tagColorMap = {
 export default function TodoList({ todos, onToggle, filter, setFilter, tags }) {
   const filteredTodos = todos
     .filter(todo => filter === '全部' || todo.tag === filter)
-    .sort((a, b) => new Date(b.create_at) - new Date(a.create_at));
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   return (
     <VStack spacing={3} align="stretch">
@@ -30,7 +30,7 @@ export default function TodoList({ todos, onToggle, filter, setFilter, tags }) {
           </HStack>
           <Text mb={1}>{todo.content}</Text>
           <Text fontSize="sm" color="gray.500" mb={1}>
-            建立於：{new Date(todo.create_at).toLocaleString()}
+            建立於：{new Date(todo.created_at).toLocaleString()}
           </Text>
           <Tag colorScheme={tagColorMap[todo.tag] || 'gray'}>
             <TagLabel>{todo.tag}</TagLabel>

@@ -24,7 +24,7 @@ export default function TodoForm({ onAdd }) {
       content,
       tag,
       complete: false,
-      create_at: new Date(),
+      created_at: new Date(),
     });
     setTitle('');
     setContent('');

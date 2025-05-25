@@ -72,7 +72,7 @@ export default function Stats({ todos, tags }) {
 
     setFilteredTodos(
       todos.filter(todo => {
-        const cDate = new Date(todo.create_at);
+        const cDate = new Date(todo.created_at);
         return cDate >= startDate && cDate <= endDate;
       })
     );
@@ -144,7 +144,7 @@ export default function Stats({ todos, tags }) {
   // 計算每天新增任務數
   const lineData = pastDays.map((day) => {
     const count = filteredTodos.filter((todo) => {
-      const cDate = new Date(todo.create_at);
+      const cDate = new Date(todo.created_at);
       return (
         cDate.getFullYear() === day.getFullYear() &&
         cDate.getMonth() === day.getMonth() &&
