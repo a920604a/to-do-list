@@ -7,7 +7,7 @@ import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
-    <Router basename="/ebook-reader">
+    <Router basename="/to-do-list">
       <div className="App">
         <Routes>
           <Route path="/" element={<LoginPage />} />
