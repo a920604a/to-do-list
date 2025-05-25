@@ -47,8 +47,8 @@ function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: 'http://localhost:3000/to-do-list/dashboard',
-          // redirectTo: 'https://你的 github pages 網址/to-do-list/dashboard',
+          // redirectTo: 'http://localhost:3000/to-do-list/dashboard',
+          redirectTo: 'https://a920604a.github.io/to-do-list/dashboard',
         },
       });
 
