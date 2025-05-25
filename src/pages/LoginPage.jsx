@@ -48,9 +48,7 @@ function LoginPage() {
         provider: 'github',
         options: {
           // redirectTo: 'http://localhost:3000/to-do-list/dashboard',
-          // redirectTo: 'https://a920604a.github.io/to-do-list/dashboard',
-          redirectTo: 'https://a920604a.github.io/to-do-list/#/dashboard',
-
+          redirectTo: 'https://a920604a.github.io/to-do-list/dashboard',
         },
       });
 
