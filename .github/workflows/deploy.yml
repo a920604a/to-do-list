@@ -20,6 +20,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Set homepage in package.json
+        run: |
+          node -e "let pkg=require('./package.json'); pkg.homepage='https://a920604a.github.io/to-do-list'; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
+
+
       - name: Create .env.production
         run: |
           echo "REACT_APP_SUPABASE_URL=${{ secrets.REACT_APP_SUPABASE_URL }}" >> .env.production
