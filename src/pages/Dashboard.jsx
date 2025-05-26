@@ -5,7 +5,7 @@ import TodoForm from '../components/TodoForm';
 import TodoList from '../components/TodoList';
 import Stats from '../components/Stats';
 import LayoutSwitcher from '../components/LayoutSwitcher';
-import { getAllTodos, addTodo, updateTodo } from '../utils/subDb';
+import { getAllTodos, addTodo, updateTodo, deleteTodo } from '../utils/subDb';
 
 const tags = ['工作', '學習', '個人', '其他'];
 
@@ -33,6 +33,12 @@ export default function Dashboard() {
     setTodos(updated);
   };
 
+  const handleDelete = async  (id) => {
+    await deleteTodo(id);
+    setTodos((prev) => prev.filter((todo) => todo.id !== id));
+  };
+
+
   return (
     <Box p={5} maxW="600px" mx="auto">
       <Heading mb={4}>代辦清單</Heading>
@@ -40,7 +46,7 @@ export default function Dashboard() {
       {page === 'list' && (
         <>
           <TodoForm onAdd={handleAddTodo} />
-          <TodoList todos={todos} onToggle={handleToggle} filter={filter} setFilter={setFilter} tags={tags} />
+          <TodoList todos={todos} onToggle={handleToggle} onDelete={handleDelete} filter={filter} setFilter={setFilter} tags={tags} />
         </>
       )}
       {page === 'stats' && <Stats todos={todos} tags={tags} />}

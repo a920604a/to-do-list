@@ -1,5 +1,15 @@
 import React from 'react';
-import { Box, Checkbox, HStack, Tag, TagLabel, Text, VStack, Select } from '@chakra-ui/react';
+import {
+  Box,
+  Checkbox,
+  HStack,
+  Tag,
+  TagLabel,
+  Text,
+  VStack,
+  Select,
+  Button,
+} from '@chakra-ui/react';
 
 const tagColorMap = {
   工作: 'red',
@@ -8,9 +18,9 @@ const tagColorMap = {
   其他: 'gray',
 };
 
-export default function TodoList({ todos, onToggle, filter, setFilter, tags }) {
+export default function TodoList({ todos, onToggle, onDelete, filter, setFilter, tags }) {
   const filteredTodos = todos
-    .filter(todo => filter === '全部' || todo.tag === filter)
+    .filter((todo) => filter === '全部' || todo.tag === filter)
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   return (
@@ -18,7 +28,9 @@ export default function TodoList({ todos, onToggle, filter, setFilter, tags }) {
       <Select value={filter} onChange={(e) => setFilter(e.target.value)} mb={3}>
         <option value="全部">全部</option>
         {tags.map((t) => (
-          <option key={t} value={t}>{t}</option>
+          <option key={t} value={t}>
+            {t}
+          </option>
         ))}
       </Select>
 
@@ -26,7 +38,14 @@ export default function TodoList({ todos, onToggle, filter, setFilter, tags }) {
         <Box key={todo.id} p={3} borderWidth={1} borderRadius="md">
           <HStack justify="space-between" mb={1}>
             <Text fontWeight="bold">{todo.title}</Text>
-            <Checkbox isChecked={todo.complete} onChange={() => onToggle(todo.id)}>完成</Checkbox>
+            <HStack>
+              <Checkbox isChecked={todo.complete} onChange={() => onToggle(todo.id)}>
+                完成
+              </Checkbox>
+              <Button colorScheme="red" size="sm" onClick={() => onDelete(todo.id)}>
+                刪除
+              </Button>
+            </HStack>
           </HStack>
           <Text mb={1}>{todo.content}</Text>
           <Text fontSize="sm" color="gray.500" mb={1}>
