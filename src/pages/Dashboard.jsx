@@ -18,25 +18,6 @@ export default function Dashboard() {
   const [userName, setUserName] = useState('');
   const toast = useToast();
 
-  const getUserId = async () => {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) {
-      console.error("取得使用者失敗", error.message);
-      toast({
-        title: "登入狀態錯誤",
-        description: "請重新登入。",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-      });
-      return null;
-    }
-    if (user) {
-      setUserName(user.user_metadata?.full_name || "親愛的用戶");
-      return user.id;
-    }
-    return null;
-  };
 
   const fetchTodos = async () => {
     try {
@@ -55,17 +36,38 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    const initialize = async () => {
-      setLoading(true);
-      const userId = await getUserId();
-      if (userId) await fetchTodos();
-      else {
-        alert("請先登入以查看待辦事項");
-      }
+  const initialize = async () => {
+    setLoading(true);
+
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) {
+      console.error("取得使用者失敗", error.message);
+      alert("請重新登入");
       setLoading(false);
-    };
-    initialize();
-  }, []);
+      return;
+    }
+
+    if (!user) {
+      alert("請先登入以查看待辦事項");
+      setLoading(false);
+      return;
+    }
+
+    setUserName(user.user_metadata?.full_name || "親愛的用戶");
+
+    try {
+      const todos = await getAllTodos();
+      setTodos(todos);
+    } catch (err) {
+      console.error("讀取失敗", err);
+    }
+
+    setLoading(false);
+  };
+
+  initialize();
+}, []); // 現在這樣就沒有依賴問題
+
 
   const handleAddTodo = async (todo) => {
     try {
