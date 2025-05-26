@@ -3,14 +3,15 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # 請確定你用的分支是 main，或改成你的分支名稱
+      - main  # 請確認你的分支名稱是否為 main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -18,18 +19,20 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Set homepage in package.json
         run: |
           node -e "let pkg=require('./package.json'); pkg.homepage='https://a920604a.github.io/to-do-list'; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
 
-
       - name: Create .env.production
         run: |
           echo "REACT_APP_SUPABASE_URL=${{ secrets.REACT_APP_SUPABASE_URL }}" >> .env.production
           echo "REACT_APP_SUPABASE_ANON_KEY=${{ secrets.REACT_APP_SUPABASE_ANON_KEY }}" >> .env.production
-
+      
+      - name: Clean old cache (optional)
+        run: |
+          git rm -rf --cached .
 
       - name: Build project
         run: npm run build
