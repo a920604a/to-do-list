@@ -88,7 +88,7 @@ export default function Dashboard() {
     };
 
     initialize();
-  }, []);
+  }, [toast]);
 
   const handleAddTodo = async (todo) => {
     try {
