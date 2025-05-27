@@ -16,12 +16,13 @@ export default function Dashboard() {
   const [page, setPage] = useState('list');
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState('');
+  const [userId, setUserId] = useState(null);
   const toast = useToast();
-
 
   const fetchTodos = async () => {
     try {
-      const todos = await getAllTodos();
+      if (!userId) return;
+      const todos = await getAllTodos(userId);
       setTodos(todos);
     } catch (err) {
       console.error("取得待辦清單失敗", err);
@@ -36,62 +37,62 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-  const initialize = async () => {
-    setLoading(true);
+    const initialize = async () => {
+      setLoading(true);
 
-    // 1. 抓取 URL hash（例如 OAuth 回傳的 access_token）
-    const hash = window.location.hash;
-    const params = new URLSearchParams(hash.replace(/^#/, ''));
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token'); // 有些 provider 也會傳
+      const hash = window.location.hash;
+      const params = new URLSearchParams(hash.replace(/^#/, ''));
+      const access_token = params.get('access_token');
+      const refresh_token = params.get('refresh_token');
 
-    // 2. 若有 access_token，手動 restore session
-    if (access_token) {
-      const { error } = await supabase.auth.setSession({
-        access_token,
-        refresh_token,
-      });
+      if (access_token) {
+        const { error } = await supabase.auth.setSession({
+          access_token,
+          refresh_token,
+        });
 
-      if (error) {
-        console.error("登入 session 設定失敗", error.message);
-        alert("登入失敗，請重新嘗試");
+        if (error) {
+          console.error("登入 session 設定失敗", error.message);
+          alert("登入失敗，請重新嘗試");
+          setLoading(false);
+          return;
+        }
+
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        toast({
+          title: "登入失敗",
+          description: "請重新登入",
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
         setLoading(false);
         return;
       }
 
-      // 清除 URL hash，避免再次執行
-      window.history.replaceState(null, '', window.location.pathname);
-    }
+      setUserName(user.user_metadata?.full_name || "親愛的用戶");
+      setUserId(user.id);
 
-    // 3. 現在可以取得使用者資訊
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) {
-      console.error("取得使用者失敗", error?.message);
-      alert("請重新登入");
+      try {
+        const todos = await getAllTodos(user.id);
+        setTodos(todos);
+      } catch (err) {
+        console.error("讀取失敗", err);
+      }
+
       setLoading(false);
-      return;
-    }
+    };
 
-    setUserName(user.user_metadata?.full_name || "親愛的用戶");
-
-    try {
-      const todos = await getAllTodos();
-      setTodos(todos);
-    } catch (err) {
-      console.error("讀取失敗", err);
-    }
-
-    setLoading(false);
-  };
-
-  initialize();
-}, []);
-
-
+    initialize();
+  }, []);
 
   const handleAddTodo = async (todo) => {
     try {
-      await addTodo(todo);
+      await addTodo(todo, userId);
       await fetchTodos();
     } catch (err) {
       console.error("新增失敗", err);
