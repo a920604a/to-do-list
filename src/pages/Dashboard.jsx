@@ -1,5 +1,5 @@
 // Dashboard.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Heading, Text, Spinner, Center, useToast } from '@chakra-ui/react';
 import TodoForm from '../components/TodoForm';
 import TodoList from '../components/TodoList';
@@ -18,24 +18,24 @@ export default function Dashboard() {
   const [userName, setUserName] = useState('');
   const toast = useToast();
 
-  const fetchTodos = async () => {
-    try {
-      setLoading(true);
-      const todos = await getAllTodos();
-      setTodos(todos);
-      setLoading(false);
-    } catch (err) {
-      console.error("取得待辦清單失敗", err);
-      toast({
-        title: "讀取失敗",
-        description: "無法取得待辦清單資料，請稍後再試。",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-      });
-      setLoading(false);
-    }
-  };
+  const fetchTodos = useCallback(async () => {
+  try {
+    setLoading(true);
+    const todos = await getAllTodos();
+    setTodos(todos);
+    setLoading(false);
+  } catch (err) {
+    console.error("取得待辦清單失敗", err);
+    toast({
+      title: "讀取失敗",
+      description: "無法取得待辦清單資料，請稍後再試。",
+      status: "error",
+      duration: 4000,
+      isClosable: true,
+    });
+    setLoading(false);
+  }
+}, [toast]);
 
   useEffect(() => {
   const auth = getAuth();
@@ -56,7 +56,8 @@ export default function Dashboard() {
   });
 
   return () => unsubscribe();
-}, [toast, fetchTodos]);
+  }, [toast, fetchTodos]);
+
 
   const handleAddTodo = async (todo) => {
     try {
