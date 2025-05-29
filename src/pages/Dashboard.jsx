@@ -16,7 +16,6 @@ export default function Dashboard() {
   const [page, setPage] = useState('list');
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState('');
-  const [userId, setUserId] = useState(null);
   const toast = useToast();
 
   const fetchTodos = async () => {
@@ -39,26 +38,25 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    const auth = getAuth();
+  const auth = getAuth();
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUserName(user.displayName || "親愛的用戶");
-        setUserId(user.uid);
-        await fetchTodos();
-      } else {
-        toast({
-          title: "尚未登入",
-          description: "請先登入才能使用待辦功能",
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    });
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      setUserName(user.displayName || "親愛的用戶");
+      await fetchTodos();
+    } else {
+      toast({
+        title: "尚未登入",
+        description: "請先登入才能使用待辦功能",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  });
 
-    return () => unsubscribe();
-  }, [toast]);
+  return () => unsubscribe();
+}, [toast, fetchTodos]);
 
   const handleAddTodo = async (todo) => {
     try {
