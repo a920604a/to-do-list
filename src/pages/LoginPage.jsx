@@ -1,36 +1,21 @@
 import { useState } from 'react';
-import { supabase } from '../utils/supabase';
+import { auth, provider, signInWithPopup } from '../utils/firebase';
 import { Button, Text, Box, Center, Heading } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
-// GitHub Icon
-const GitHubIcon = () => (
-  <svg
-    className="h-5 w-5 mr-2"
-    aria-hidden="true"
-    fill="currentColor"
-    viewBox="0 0 20 20"
-  >
-    <path
-      fillRule="evenodd"
-      d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"
-      clipRule="evenodd"
-    />
+// Google Icon (可自行換圖)
+const GoogleIcon = () => (
+  <svg className="h-5 w-5 mr-2" viewBox="0 0 533.5 544.3">
+    <path fill="#4285f4" d="M533.5 278.4c0-17.3-1.4-34-4.1-50.3H272v95.1h146.9c-6.4 34.7-25.7 64.1-54.6 83.6l88.2 68.5c51.4-47.3 80.9-117 80.9-196.9z"/>
+    <path fill="#34a853" d="M272 544.3c73.7 0 135.6-24.4 180.8-66.2l-88.2-68.5c-24.5 16.4-55.9 26-92.6 26-71.2 0-131.5-48.1-153.1-112.8H27.6v70.8C72.9 477.1 166.7 544.3 272 544.3z"/>
+    <path fill="#fbbc04" d="M118.9 322.7c-10.6-31.3-10.6-65.3 0-96.6V155.3H27.6c-34.6 69.3-34.6 150.4 0 219.7l91.3-70.8z"/>
+    <path fill="#ea4335" d="M272 107.7c39.9 0 75.9 13.7 104.3 40.6l78.1-78.1C407.6 24.4 345.7 0 272 0 166.7 0 72.9 67.2 27.6 155.3l91.3 70.8C140.5 155.8 200.8 107.7 272 107.7z"/>
   </svg>
 );
 
-// Error Alert
 const Alert = ({ message }) => (
-  <Box
-    mb={4}
-    bg="orange.50"
-    borderLeft="4px solid"
-    borderColor="orange.500"
-    p={4}
-    color="orange.700"
-    borderRadius="lg"
-    animation="fade-in 0.5s"
-  >
+  <Box mb={4} bg="orange.50" borderLeft="4px solid" borderColor="orange.500" p={4} color="orange.700" borderRadius="lg">
     <Text>{message}</Text>
   </Box>
 );
@@ -38,27 +23,20 @@ const Alert = ({ message }) => (
 function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleGitHubLogin = async () => {
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          // redirectTo: 'http://localhost:3000/to-do-list/dashboard',
-          redirectTo: 'https://a920604a.github.io/to-do-list/dashboard',
-        },
-      });
-
-      if (error) {
-        console.error('GitHub login failed:', error.message);
-        setError(error.message);
-      }
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      console.log('登入成功：', user);
+      navigate('/dashboard');
     } catch (err) {
-      console.error('Login error:', err);
-      setError('發生意外錯誤，請重試。');
+      console.error('Google 登入錯誤：', err);
+      setError('登入失敗，請稍後再試。');
     } finally {
       setIsLoading(false);
     }
@@ -67,11 +45,7 @@ function LoginPage() {
   return (
     <Center minHeight="100vh" bgGradient="linear(to-br, teal.50, blue.200)">
       <Box w="full" maxW="xs" p={4} textAlign="center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
           <Heading as="h1" size="lg" mb={2} color="gray.900">
             我的代辦清單
           </Heading>
@@ -87,28 +61,27 @@ function LoginPage() {
             borderRadius="xl"
             borderColor="teal.300"
             borderWidth={1}
-            transition="all 0.3s"
             _hover={{ shadow: 'xl' }}
           >
             <Text fontSize="lg" fontWeight="semibold" color="gray.800" mb={6}>
-              使用 GitHub 帳戶登入
+              使用 Google 帳戶登入
             </Text>
 
             {error && <Alert message={error} />}
 
             <Button
-              onClick={handleGitHubLogin}
+              onClick={handleGoogleLogin}
               isLoading={isLoading}
               loadingText="登入中..."
               colorScheme="teal"
               variant="solid"
               w="full"
-              leftIcon={<GitHubIcon />}
+              leftIcon={<GoogleIcon />}
               mb={4}
               _hover={{ bg: 'teal.700' }}
-              aria-label="使用 GitHub 登入"
+              aria-label="使用 Google 登入"
             >
-              使用 GitHub 登入
+              使用 Google 登入
             </Button>
 
             <Text fontSize="sm" color="gray.500">

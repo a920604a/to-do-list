@@ -5,8 +5,8 @@ import TodoForm from '../components/TodoForm';
 import TodoList from '../components/TodoList';
 import Stats from '../components/Stats';
 import LayoutSwitcher from '../components/LayoutSwitcher';
-import { getAllTodos, addTodo, updateTodo, deleteTodo } from '../utils/subDb';
-import { supabase } from "../utils/supabase";
+import { getAllTodos, addTodo, updateTodo, deleteTodo } from '../utils/firebaseDb';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 const tags = ['工作', '學習', '個人', '其他'];
 
@@ -21,9 +21,10 @@ export default function Dashboard() {
 
   const fetchTodos = async () => {
     try {
-      if (!userId) return;
-      const todos = await getAllTodos(userId);
+      setLoading(true);
+      const todos = await getAllTodos();
       setTodos(todos);
+      setLoading(false);
     } catch (err) {
       console.error("取得待辦清單失敗", err);
       toast({
@@ -33,66 +34,35 @@ export default function Dashboard() {
         duration: 4000,
         isClosable: true,
       });
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const initialize = async () => {
-      setLoading(true);
+    const auth = getAuth();
 
-      const hash = window.location.hash;
-      const params = new URLSearchParams(hash.replace(/^#/, ''));
-      const access_token = params.get('access_token');
-      const refresh_token = params.get('refresh_token');
-
-      if (access_token) {
-        const { error } = await supabase.auth.setSession({
-          access_token,
-          refresh_token,
-        });
-
-        if (error) {
-          console.error("登入 session 設定失敗", error.message);
-          alert("登入失敗，請重新嘗試");
-          setLoading(false);
-          return;
-        }
-
-        window.history.replaceState(null, '', window.location.pathname);
-      }
-
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error || !user) {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUserName(user.displayName || "親愛的用戶");
+        setUserId(user.uid);
+        await fetchTodos();
+      } else {
         toast({
-          title: "登入失敗",
-          description: "請重新登入",
-          status: "error",
-          duration: 4000,
+          title: "尚未登入",
+          description: "請先登入才能使用待辦功能",
+          status: "warning",
+          duration: 3000,
           isClosable: true,
         });
-        setLoading(false);
-        return;
       }
+    });
 
-      setUserName(user.user_metadata?.full_name || "親愛的用戶");
-      setUserId(user.id);
-
-      try {
-        const todos = await getAllTodos(user.id);
-        setTodos(todos);
-      } catch (err) {
-        console.error("讀取失敗", err);
-      }
-
-      setLoading(false);
-    };
-
-    initialize();
+    return () => unsubscribe();
   }, [toast]);
 
   const handleAddTodo = async (todo) => {
     try {
-      await addTodo(todo, userId);
+      await addTodo(todo);
       await fetchTodos();
     } catch (err) {
       console.error("新增失敗", err);
