@@ -91,7 +91,6 @@ export default function StatsView({ todos, tags }) {
 
   // 額外統計分析
   const alertCount = filteredTodos.filter(t => t.alert === true).length;
-  const noAlertCount = filteredTodos.length - alertCount;
 
   const soonDeadlineTodos = filteredTodos.filter(t => {
     const deadline = new Date(t.deadline);
