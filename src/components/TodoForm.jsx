@@ -10,9 +10,14 @@ const tagColorMap = {
   個人: 'blue',
   其他: 'gray',
 };
-
-export default function TodoForm({ onAdd, initialValues, onUpdate, onCancel, tags = possibleTags }) {
-  // 編輯模式初始化欄位
+export default function TodoForm({
+  onAdd,
+  initialValues,
+  onUpdate,
+  onCancel,
+  tags = possibleTags,
+  readOnly = false,  // 新增這個 props 控制是否只讀
+}) {
   const [title, setTitle] = useState(initialValues?.title || '');
   const [content, setContent] = useState(initialValues?.content || '');
   const [tag, setTag] = useState(initialValues?.tag || tags[0]);
@@ -23,6 +28,7 @@ export default function TodoForm({ onAdd, initialValues, onUpdate, onCancel, tag
   );
 
   const handleSubmit = () => {
+    if (readOnly) return;  // 純檢視不送出
     if (!title.trim()) return;
 
     const todoData = {
@@ -32,12 +38,11 @@ export default function TodoForm({ onAdd, initialValues, onUpdate, onCancel, tag
       tag,
       complete: initialValues?.complete || false,
       created_at: initialValues?.created_at ? new Date(initialValues.created_at) : new Date(),
-      updated_at: new Date(),  // 更新時間設為現在
+      updated_at: new Date(),
       deadline: deadline && !isNaN(new Date(deadline))
-          ? new Date(deadline)
-          : new Date(new Date().setFullYear(new Date().getFullYear() + 10)),
+        ? new Date(deadline)
+        : new Date(new Date().setFullYear(new Date().getFullYear() + 10)),
     };
-  console.log('提交的 Todo:', todoData);
 
     if (onAdd && !initialValues) {
       onAdd(todoData);
@@ -45,13 +50,10 @@ export default function TodoForm({ onAdd, initialValues, onUpdate, onCancel, tag
       setContent('');
       setTag(tags[0]);
       setDeadline('');
-      console.log('新的 Todo:', todoData);
     }
 
     if (onUpdate && initialValues) {
       onUpdate(todoData);
-      
-    console.log('編輯的 Todo:', todoData);
     }
   };
 
@@ -64,55 +66,67 @@ export default function TodoForm({ onAdd, initialValues, onUpdate, onCancel, tag
     }
   }, [content]);
 
-
   return (
     <VStack spacing={3} align="stretch" mb={6}>
-      <Input placeholder="標題" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <Input
+          placeholder="標題"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          isReadOnly={readOnly}  // 只讀控制
+      />
       <Textarea
           placeholder="內容"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onInput={(e) => {
             const target = e.target;
-            target.style.height = 'auto';           // 先重設高度
-            target.style.height = `${target.scrollHeight}px`; // 根據內容調整高度
+            target.style.height = 'auto';
+            target.style.height = `${target.scrollHeight}px`;
           }}
           resize="none"
           overflow="hidden"
           minH="80px"
           maxH="300px"
           ref={textareaRef}
+          isReadOnly={readOnly}  // 只讀
+      />
 
-        />
-
-      
-      <RadioGroup value={tag} onChange={setTag}>
+      <RadioGroup
+        value={tag}
+        onChange={readOnly ? undefined : setTag} // 只讀時不允許改變
+      >
         <HStack spacing={4}>
           {tags.map((t) => (
-            <Radio key={t} value={t} colorScheme={tagColorMap[t]}>
+            <Radio
+              key={t}
+              value={t}
+              colorScheme={tagColorMap[t]}
+              isDisabled={readOnly} // 只讀時禁用
+            >
               {t}
             </Radio>
           ))}
         </HStack>
       </RadioGroup>
 
-      {/* 新增截止日期欄位 */}
       <Input
         type="date"
         value={deadline}
         onChange={(e) => setDeadline(e.target.value)}
         placeholder="截止日期"
+        isReadOnly={readOnly}
+        pointerEvents={readOnly ? 'none' : 'auto'} // 防止日期選擇器彈出
       />
 
       <HStack spacing={4}>
-        {(onUpdate && initialValues) ? (
+        {!readOnly && (onUpdate && initialValues ? (
           <>
             <Button colorScheme="blue" onClick={handleSubmit}>更新</Button>
             <Button onClick={onCancel}>取消</Button>
           </>
         ) : (
           <Button colorScheme="blue" onClick={handleSubmit}>新增</Button>
-        )}
+        ))}
       </HStack>
     </VStack>
   );

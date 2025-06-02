@@ -6,13 +6,6 @@ import {
   Spinner,
   Center,
   useToast,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  useDisclosure,
 } from '@chakra-ui/react';
 import 'react-calendar/dist/Calendar.css';
 
@@ -30,23 +23,17 @@ const tags = ['工作', '學習', '個人', '其他'];
 export default function Dashboard() {
   const [todos, setTodos] = useState([]);
   const [filter, setFilter] = useState('全部');
-  const [page, setPage] = useState('list');  // 預覽模式 list, stats, calendar
+  const [page, setPage] = useState('list'); // 預覽模式：list, stats, calendar
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState('');
-  const [editingTodo, setEditingTodo] = useState(null);
   const toast = useToast();
-
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [searchTerm, setSearchTerm] = useState('');
-
-
 
   const fetchTodos = useCallback(async () => {
     try {
       setLoading(true);
       const todos = await getAllTodos();
       setTodos(todos);
-      setLoading(false);
     } catch (err) {
       console.error('取得待辦清單失敗', err);
       toast({
@@ -56,13 +43,13 @@ export default function Dashboard() {
         duration: 4000,
         isClosable: true,
       });
+    } finally {
       setLoading(false);
     }
   }, [toast]);
 
   useEffect(() => {
     const auth = getAuth();
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserName(user.displayName || '親愛的用戶');
@@ -112,21 +99,9 @@ export default function Dashboard() {
     }
   };
 
-  const handleEdit = (todo) => {
-    setEditingTodo(todo);
-    onOpen();
-  };
-
-  const handleCancelEdit = () => {
-    setEditingTodo(null);
-    onClose();
-  };
-
   const handleUpdateTodo = async (updatedTodo) => {
     try {
       await updateTodo(updatedTodo);
-      setEditingTodo(null);
-      onClose();
       await fetchTodos();
     } catch (err) {
       console.error('更新失敗', err);
@@ -179,44 +154,10 @@ export default function Dashboard() {
       )}
 
       <LayoutSwitcher page={page} setPage={setPage} />
-      
-      {page === 'list' && (
-        <ListView
-          todos={todos}
-          filter={filter}
-          setFilter={setFilter}
-          tags={tags}
-          onAdd={handleAddTodo}
-          onToggle={handleToggle}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-        />
-      )}
 
+      {page === 'list' && (<ListView todos={todos} tags={tags} />)}
       {page === 'stats' && <StatsView todos={todos} tags={tags} />}
-
       {page === 'calendar' && <CalendarView todos={todos} />}
-      
-      {/* 編輯 Modal */}
-      <Modal isOpen={isOpen} onClose={handleCancelEdit}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>編輯代辦事項</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {editingTodo && (
-              <TodoForm
-                initialValues={editingTodo}
-                onUpdate={handleUpdateTodo}
-                onCancel={handleCancelEdit}
-                tags={tags}
-              />
-            )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
     </Box>
   );
 }
