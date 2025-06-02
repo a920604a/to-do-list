@@ -33,8 +33,11 @@ export default function TodoForm({ onAdd, initialValues, onUpdate, onCancel, tag
       complete: initialValues?.complete || false,
       created_at: initialValues?.created_at ? new Date(initialValues.created_at) : new Date(),
       updated_at: new Date(),  // 更新時間設為現在
-      deadline: deadline ? new Date(deadline) : null,
+      deadline: deadline && !isNaN(new Date(deadline))
+          ? new Date(deadline)
+          : new Date(new Date().setFullYear(new Date().getFullYear() + 10)),
     };
+  console.log('提交的 Todo:', todoData);
 
     if (onAdd && !initialValues) {
       onAdd(todoData);
@@ -42,10 +45,13 @@ export default function TodoForm({ onAdd, initialValues, onUpdate, onCancel, tag
       setContent('');
       setTag(tags[0]);
       setDeadline('');
+      console.log('新的 Todo:', todoData);
     }
 
     if (onUpdate && initialValues) {
       onUpdate(todoData);
+      
+    console.log('編輯的 Todo:', todoData);
     }
   };
 
