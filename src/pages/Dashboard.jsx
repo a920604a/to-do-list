@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Heading, Text, Spinner, Center, useToast } from '@chakra-ui/react';
+import { Box, Heading, Text, Spinner, Center, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, useDisclosure } from '@chakra-ui/react';
 import TodoForm from '../components/TodoForm';
 import TodoList from '../components/TodoList';
 import Stats from '../components/Stats';
@@ -17,6 +17,8 @@ export default function Dashboard() {
   const [userName, setUserName] = useState('');
   const [editingTodo, setEditingTodo] = useState(null);
   const toast = useToast();
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const fetchTodos = useCallback(async () => {
     try {
@@ -89,21 +91,24 @@ export default function Dashboard() {
     }
   };
 
-  // 新增：開始編輯
+  // 編輯打開 Modal
   const handleEdit = (todo) => {
     setEditingTodo(todo);
+    onOpen();
   };
 
-  // 新增：取消編輯
+  // 編輯取消關閉 Modal
   const handleCancelEdit = () => {
     setEditingTodo(null);
+    onClose();
   };
 
-  // 新增：提交更新
+  // 編輯提交更新
   const handleUpdateTodo = async (updatedTodo) => {
     try {
       await updateTodo(updatedTodo);
       setEditingTodo(null);
+      onClose();
       await fetchTodos();
     } catch (err) {
       console.error("更新失敗", err);
@@ -129,16 +134,7 @@ export default function Dashboard() {
       <LayoutSwitcher page={page} setPage={setPage} />
       {page === 'list' && (
         <>
-          {editingTodo ? (
-            <TodoForm
-              initialValues={editingTodo}
-              onUpdate={handleUpdateTodo}
-              onCancel={handleCancelEdit}
-              tags={tags}
-            />
-          ) : (
-            <TodoForm onAdd={handleAddTodo} tags={tags} />
-          )}
+          <TodoForm onAdd={handleAddTodo} tags={tags} />
           <TodoList
             todos={todos}
             onToggle={handleToggle}
@@ -151,6 +147,26 @@ export default function Dashboard() {
         </>
       )}
       {page === 'stats' && <Stats todos={todos} tags={tags} />}
+
+      {/* 編輯 Modal */}
+      <Modal isOpen={isOpen} onClose={handleCancelEdit}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>編輯代辦事項</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {editingTodo && (
+              <TodoForm
+                initialValues={editingTodo}
+                onUpdate={handleUpdateTodo}
+                onCancel={handleCancelEdit}
+                tags={tags}
+              />
+            )}
+          </ModalBody>
+          {/* ModalFooter 留空或移除，因為 TodoForm 內有送出與取消按鈕 */}
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }
