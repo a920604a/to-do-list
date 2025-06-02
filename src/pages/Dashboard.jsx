@@ -135,8 +135,8 @@ export default function Dashboard() {
       {page === 'list' && (
         <>
           <TodoForm onAdd={handleAddTodo} tags={tags} />
-          <TodoList
-            todos={todos}
+          <TodoList  
+            todos={todos.filter(todo => !todo.complete)}  // 只傳未完成的代辦
             onToggle={handleToggle}
             onDelete={handleDelete}
             onEdit={handleEdit}
