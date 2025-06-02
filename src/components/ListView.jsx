@@ -57,7 +57,7 @@ export default function ListView({ initialTodos = [], tags }) {
       }
     }
     fetchTodos();
-  }, []);
+  }, [toast]);
 
   /*** 時間解析輔助函式 ***/
   const parseTime = (val) => {
