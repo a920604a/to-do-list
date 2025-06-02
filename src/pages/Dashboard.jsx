@@ -13,7 +13,11 @@ import {
   ModalCloseButton,
   ModalBody,
   useDisclosure,
+  Input,
+  InputGroup,
+  InputLeftElement,
 } from '@chakra-ui/react';
+import { SearchIcon } from '@chakra-ui/icons';
 import TodoForm from '../components/TodoForm';
 import TodoList from '../components/TodoList';
 import Stats from '../components/Stats';
@@ -33,6 +37,20 @@ export default function Dashboard() {
   const toast = useToast();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [searchTerm, setSearchTerm] = useState('');
+
+
+  const filteredTodos = todos.filter((todo) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      !todo.complete &&  // 過濾掉已完成的
+      (
+        todo.title.toLowerCase().includes(search) ||
+        todo.content?.toLowerCase().includes(search)
+      )
+    );
+  });
+
 
   const fetchTodos = useCallback(async () => {
     try {
@@ -174,11 +192,24 @@ export default function Dashboard() {
       )}
 
       <LayoutSwitcher page={page} setPage={setPage} />
+      
       {page === 'list' && (
         <>
           <TodoForm onAdd={handleAddTodo} tags={tags} />
+          
+        <InputGroup mb={4}>
+          <InputLeftElement pointerEvents="none">
+            <SearchIcon color="gray.400" />
+          </InputLeftElement>
+          <Input
+            placeholder="搜尋待辦標題或內容..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            bg="white"
+          />
+        </InputGroup>
           <TodoList
-            todos={todos.filter(todo => !todo.complete)}  // 只傳未完成的代辦
+            todos={filteredTodos}  // 只傳未完成的代辦
             onToggle={handleToggle}
             onDelete={handleDelete}
             onEdit={handleEdit}
@@ -188,6 +219,7 @@ export default function Dashboard() {
           />
         </>
       )}
+      
       {page === 'stats' && <Stats todos={todos} tags={tags} />}
 
       {/* 編輯 Modal */}
