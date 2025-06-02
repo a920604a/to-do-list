@@ -13,7 +13,6 @@ import {
   Icon,
 } from '@chakra-ui/react';
 import {
-  FiCheckSquare,
   FiEdit2,
   FiTrash2,
   FiClock,
