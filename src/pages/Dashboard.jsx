@@ -13,12 +13,7 @@ import {
   ModalCloseButton,
   ModalBody,
   useDisclosure,
-  Input,
-  InputGroup,
-  InputLeftElement,
 } from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
-import Calendar from 'react-calendar';  // 記得安裝 react-calendar
 import 'react-calendar/dist/Calendar.css';
 
 import TodoForm from '../components/TodoForm';
