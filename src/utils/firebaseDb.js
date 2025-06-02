@@ -39,9 +39,19 @@ export async function addTodo(todo) {
 
     const db = getDatabase();
     const id = uuidv4(); // 產生新的 UUID
+
+    // 處理 deadline，如果無效就設為 10 年後
+    const deadline = todo.deadline && !isNaN(new Date(todo.deadline))
+        ? new Date(todo.deadline).getTime()
+        : new Date(new Date().setFullYear(new Date().getFullYear() + 10)).getTime();
+
+
+
     await set(ref(db, `${DB_PATH}/${userId}/${id}`), {
         ...todo,
+        deadline, // ✅ 明確寫入 timestamp
         created_at: Date.now(),
+        updated_at: Date.now(),
         id,  // 把 id 寫進資料
     });
     return id;
