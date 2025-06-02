@@ -1,4 +1,4 @@
-import  { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Heading,
@@ -18,10 +18,16 @@ import {
   InputLeftElement,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
+import Calendar from 'react-calendar';  // 記得安裝 react-calendar
+import 'react-calendar/dist/Calendar.css';
+
 import TodoForm from '../components/TodoForm';
 import TodoList from '../components/TodoList';
-import Stats from '../components/Stats';
+import StatsView from '../components/StatsView';
+import CalendarView from '../components/CalendarView';
+import ListView from '../components/ListView';
 import LayoutSwitcher from '../components/LayoutSwitcher';
+
 import { getAllTodos, addTodo, updateTodo, deleteTodo } from '../utils/firebaseDb';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
@@ -30,7 +36,7 @@ const tags = ['工作', '學習', '個人', '其他'];
 export default function Dashboard() {
   const [todos, setTodos] = useState([]);
   const [filter, setFilter] = useState('全部');
-  const [page, setPage] = useState('list');
+  const [page, setPage] = useState('list');  // 預覽模式 list, stats, calendar
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState('');
   const [editingTodo, setEditingTodo] = useState(null);
@@ -39,18 +45,16 @@ export default function Dashboard() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [searchTerm, setSearchTerm] = useState('');
 
-
   const filteredTodos = todos.filter((todo) => {
     const search = searchTerm.toLowerCase();
     return (
-      !todo.complete &&  // 過濾掉已完成的
+      !todo.complete &&
       (
         todo.title.toLowerCase().includes(search) ||
         todo.content?.toLowerCase().includes(search)
       )
     );
   });
-
 
   const fetchTodos = useCallback(async () => {
     try {
@@ -144,7 +148,6 @@ export default function Dashboard() {
     }
   };
 
-  // 🔔 找出即將到期的事項（5 天內）
   const getNearDeadlineTodos = (todos) => {
     const today = new Date();
     return todos.filter((todo) => {
@@ -174,7 +177,6 @@ export default function Dashboard() {
         </Text>
       )}
 
-      {/* 🔔 提醒區塊 */}
       {nearDeadlineTodos.length > 0 && (
         <Box bg="orange.50" border="1px solid" borderColor="orange.200" borderRadius="md" p={4} mb={4}>
           <Text fontWeight="bold" mb={2} color="orange.600">
@@ -194,34 +196,24 @@ export default function Dashboard() {
       <LayoutSwitcher page={page} setPage={setPage} />
       
       {page === 'list' && (
-        <>
-          <TodoForm onAdd={handleAddTodo} tags={tags} />
-          
-        <InputGroup mb={4}>
-          <InputLeftElement pointerEvents="none">
-            <SearchIcon color="gray.400" />
-          </InputLeftElement>
-          <Input
-            placeholder="搜尋待辦標題或內容..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            bg="white"
-          />
-        </InputGroup>
-          <TodoList
-            todos={filteredTodos}  // 只傳未完成的代辦
-            onToggle={handleToggle}
-            onDelete={handleDelete}
-            onEdit={handleEdit}
-            filter={filter}
-            setFilter={setFilter}
-            tags={tags}
-          />
-        </>
+        <ListView
+          todos={todos}
+          filter={filter}
+          setFilter={setFilter}
+          tags={tags}
+          onAdd={handleAddTodo}
+          onToggle={handleToggle}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+        />
       )}
-      
-      {page === 'stats' && <Stats todos={todos} tags={tags} />}
 
+      {page === 'stats' && <StatsView todos={todos} tags={tags} />}
+
+      {page === 'calendar' && <CalendarView todos={todos} />}
+      
       {/* 編輯 Modal */}
       <Modal isOpen={isOpen} onClose={handleCancelEdit}>
         <ModalOverlay />
