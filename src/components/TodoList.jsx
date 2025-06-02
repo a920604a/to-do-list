@@ -59,11 +59,17 @@ export default function TodoList({ todos, onToggle, onDelete, onEdit, filter, se
               </Button>
             </HStack>
           </HStack>
-          <Text mb={2} whiteSpace="pre-wrap" color="gray.700">
+          <Text mb={2} whiteSpace="pre-wrap" color="gray.700" isTruncated >
             {todo.content || '（無內容）'}
           </Text>
           <Text fontSize="sm" color="gray.500" mb={1}>
             建立於：{new Date(todo.created_at).toLocaleString()}
+          </Text>
+          <Text fontSize="sm" color="gray.600" mb={1}>
+            截止日期：{todo.deadline ? new Date(todo.deadline).toLocaleDateString() : '無'}
+          </Text>
+          <Text fontSize="xs" color="gray.400" mb={1}>
+            最後更新：{new Date(todo.updated_at).toLocaleString()}
           </Text>
           <Tag colorScheme={tagColorMap[todo.tag] || 'gray'}>
             <TagLabel>{todo.tag}</TagLabel>
