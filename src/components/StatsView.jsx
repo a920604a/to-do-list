@@ -4,6 +4,8 @@ import { VStack, Box, Text, useColorModeValue } from '@chakra-ui/react';
 import TimeRangeSelector from './TimeRangeSelector';
 import CategoryCharts from './CategoryCharts';
 import LineChartTrend from './LineChartTrend';
+import DeadlineBarChart from './DeadlineBarChart';
+import CompletionRateChart from './CompletionRateChart';
 
 // 時間區間輔助函式
 function getStartOfWeek(date) {
@@ -78,19 +80,49 @@ export default function StatsView({ todos, tags }) {
     );
   }, [timeRange, customStart, customEnd, todos]);
 
-  // 分類統計資料（圓餅 & 長條共用）
-  const data = tags.map((tag) => ({
+  const data = tags.map(tag => ({
     name: tag,
-    value: filteredTodos.filter((t) => t.tag === tag).length,
+    value: filteredTodos.filter(t => t.tag === tag).length,
   }));
 
-  // 已完成任務數
-  const completedCount = filteredTodos.filter((t) => t.complete).length;
+  const completedCount = filteredTodos.filter(t => t.complete).length;
 
-  // 日期格式化
-  const formatDate = (date) => `${date.getMonth() + 1}/${date.getDate()}`;
+  const now = new Date();
 
-  // 產生範圍內日期陣列
+  // 額外統計分析
+  const alertCount = filteredTodos.filter(t => t.alert === true).length;
+  const noAlertCount = filteredTodos.length - alertCount;
+
+  const soonDeadlineTodos = filteredTodos.filter(t => {
+    const deadline = new Date(t.deadline);
+    return (
+      !t.complete &&
+      deadline >= now &&
+      deadline <= new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
+    );
+  });
+
+  const overdueTodos = filteredTodos.filter(t => {
+    const deadline = new Date(t.deadline);
+    return !t.complete && deadline < now;
+  });
+
+  const formatDate = date => `${date.getMonth() + 1}/${date.getDate()}`;
+
+  // deadline 分布圖表資料
+  const deadlineDistribution = {};
+  filteredTodos.forEach(todo => {
+    if (todo.deadline) {
+      const dateKey = formatDate(new Date(todo.deadline));
+      deadlineDistribution[dateKey] = (deadlineDistribution[dateKey] || 0) + 1;
+    }
+  });
+
+  const deadlineChartData = Object.entries(deadlineDistribution).map(([date, count]) => ({
+    date,
+    count,
+  }));
+
   const generateDateRange = () => {
     let start, end;
     const now = new Date();
@@ -120,9 +152,8 @@ export default function StatsView({ todos, tags }) {
         if (customStart && customEnd) {
           start = new Date(customStart);
           end = new Date(customEnd);
-          break;  // 有條件的 break
+          break;
         } else {
-          // 這裡補上 break，避免 fallthrough
           break;
         }
       default:
@@ -141,9 +172,8 @@ export default function StatsView({ todos, tags }) {
 
   const pastDays = generateDateRange();
 
-  // 計算每天新增任務數
-  const lineData = pastDays.map((day) => {
-    const count = filteredTodos.filter((todo) => {
+  const lineData = pastDays.map(day => {
+    const count = filteredTodos.filter(todo => {
       const cDate = new Date(todo.created_at);
       return (
         cDate.getFullYear() === day.getFullYear() &&
@@ -160,18 +190,15 @@ export default function StatsView({ todos, tags }) {
 
   return (
     <VStack spacing={8} align="stretch" maxW="900px" mx="auto" px={6} py={6}>
-      <Box
-        p={6}
-        bg={bgCard}
-        rounded="md"
-        boxShadow="md"
-        textAlign="center"
-      >
+      <Box p={6} bg={bgCard} rounded="md" boxShadow="md" textAlign="center">
         <Text fontSize="2xl" fontWeight="bold" mb={3}>
           任務總覽 ({timeRange})
         </Text>
         <Text fontSize="md" mb={1}>總任務數：{filteredTodos.length}</Text>
-        <Text fontSize="md">已完成任務數：{completedCount}</Text>
+        <Text fontSize="md" mb={3}>已完成任務數：{completedCount}</Text>
+        <Text fontSize="md" color="teal.500">🔔 提醒任務：{alertCount} / {filteredTodos.length}</Text>
+        <Text fontSize="md" color="orange.500">⚠️ 即將到期任務：{soonDeadlineTodos.length}</Text>
+        <Text fontSize="md" color="red.500">❗ 逾期未完成任務：{overdueTodos.length}</Text>
       </Box>
 
       <Box p={6} bg={bgCard} rounded="md" boxShadow="md">
@@ -187,8 +214,10 @@ export default function StatsView({ todos, tags }) {
         />
         <CategoryCharts data={data} />
       </Box>
+      <CompletionRateChart completedCount={completedCount} totalCount={filteredTodos.length} />
 
       <LineChartTrend data={lineData} timeRange={timeRange} />
+      <DeadlineBarChart data={deadlineChartData} />
     </VStack>
   );
 }
