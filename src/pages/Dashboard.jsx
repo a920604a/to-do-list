@@ -9,25 +9,22 @@ import {
 } from '@chakra-ui/react';
 import 'react-calendar/dist/Calendar.css';
 
-import TodoForm from '../components/TodoForm';
 import StatsView from '../components/StatsView';
 import CalendarView from '../components/CalendarView';
 import ListView from '../components/ListView';
 import LayoutSwitcher from '../components/LayoutSwitcher';
 
-import { getAllTodos, addTodo, updateTodo, deleteTodo } from '../utils/firebaseDb';
+import { getAllTodos} from '../utils/firebaseDb';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 const tags = ['工作', '學習', '個人', '其他'];
 
 export default function Dashboard() {
   const [todos, setTodos] = useState([]);
-  const [filter, setFilter] = useState('全部');
   const [page, setPage] = useState('list'); // 預覽模式：list, stats, calendar
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState('');
   const toast = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchTodos = useCallback(async () => {
     try {
@@ -68,45 +65,6 @@ export default function Dashboard() {
     return () => unsubscribe();
   }, [toast, fetchTodos]);
 
-  const handleAddTodo = async (todo) => {
-    try {
-      await addTodo(todo);
-      await fetchTodos();
-    } catch (err) {
-      console.error('新增失敗', err);
-    }
-  };
-
-  const handleToggle = async (id) => {
-    try {
-      const updated = todos.map((todo) =>
-        todo.id === id ? { ...todo, complete: !todo.complete } : todo
-      );
-      const toggled = updated.find((t) => t.id === id);
-      if (toggled) await updateTodo(toggled);
-      setTodos(updated);
-    } catch (err) {
-      console.error('更新失敗', err);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await deleteTodo(id);
-      setTodos((prev) => prev.filter((todo) => todo.id !== id));
-    } catch (err) {
-      console.error('刪除失敗', err);
-    }
-  };
-
-  const handleUpdateTodo = async (updatedTodo) => {
-    try {
-      await updateTodo(updatedTodo);
-      await fetchTodos();
-    } catch (err) {
-      console.error('更新失敗', err);
-    }
-  };
 
   const getNearDeadlineTodos = (todos) => {
     const today = new Date();
