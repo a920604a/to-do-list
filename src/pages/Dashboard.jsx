@@ -22,7 +22,6 @@ import Calendar from 'react-calendar';  // 記得安裝 react-calendar
 import 'react-calendar/dist/Calendar.css';
 
 import TodoForm from '../components/TodoForm';
-import TodoList from '../components/TodoList';
 import StatsView from '../components/StatsView';
 import CalendarView from '../components/CalendarView';
 import ListView from '../components/ListView';
@@ -45,16 +44,7 @@ export default function Dashboard() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredTodos = todos.filter((todo) => {
-    const search = searchTerm.toLowerCase();
-    return (
-      !todo.complete &&
-      (
-        todo.title.toLowerCase().includes(search) ||
-        todo.content?.toLowerCase().includes(search)
-      )
-    );
-  });
+
 
   const fetchTodos = useCallback(async () => {
     try {
