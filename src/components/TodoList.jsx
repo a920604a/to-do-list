@@ -18,10 +18,34 @@ const tagColorMap = {
   其他: 'gray',
 };
 
-export default function TodoList({ todos, onToggle, onDelete, onEdit, onView, filter, setFilter, tags }) {
+export default function TodoList({
+  todos,
+  onToggle,
+  onDelete,
+  onEdit,
+  onView,
+  filter,
+  setFilter,
+  tags,
+}) {
   const filteredTodos = todos
     .filter((todo) => filter === '全部' || todo.tag === filter)
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const handleBoxClick = (e, todo) => {
+    const target = e.target;
+
+    // 避免來自 Button、Checkbox、其子元素的點擊觸發 onView
+    if (
+      target.closest('button') ||
+      target.closest('input[type="checkbox"]') ||
+      target.closest('label')
+    ) {
+      return;
+    }
+
+    onView(todo);
+  };
 
   return (
     <VStack spacing={3} align="stretch">
@@ -44,7 +68,7 @@ export default function TodoList({ todos, onToggle, onDelete, onEdit, onView, fi
         bg={todo.complete ? 'gray.100' : 'white'}
         _hover={{ bg: 'gray.50' }}
         cursor="pointer"
-        onClick={() => onView(todo)}
+        onClick={(e) => handleBoxClick(e, todo)}
       >
         <HStack justify="space-between" mb={1}>
           <Text fontWeight="bold" fontSize="lg" noOfLines={1}>
@@ -53,10 +77,8 @@ export default function TodoList({ todos, onToggle, onDelete, onEdit, onView, fi
           <HStack spacing={2}>
             <Checkbox
               isChecked={todo.complete}
-              onChange={(e) => {
-                e.stopPropagation();
-                onToggle(todo.id);
-              }}
+              onClick={(e) => e.stopPropagation()}
+              onChange={() => onToggle(todo.id)}
             >
               完成
             </Checkbox>
@@ -99,7 +121,6 @@ export default function TodoList({ todos, onToggle, onDelete, onEdit, onView, fi
         </Tag>
       </Box>
     ))}
-
     </VStack>
   );
 }
