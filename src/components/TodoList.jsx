@@ -8,8 +8,16 @@ import {
   Text,
   VStack,
   Select,
-  Button,
+  IconButton,
+  Tooltip,
+  Icon,
 } from '@chakra-ui/react';
+import {
+  FiEdit2,
+  FiTrash2,
+  FiClock,
+  FiCalendar,
+} from 'react-icons/fi';
 
 const tagColorMap = {
   工作: 'red',
@@ -18,10 +26,32 @@ const tagColorMap = {
   其他: 'gray',
 };
 
-export default function TodoList({ todos, onToggle, onDelete, onEdit, filter, setFilter, tags }) {
+export default function TodoList({
+  todos,
+  onToggle,
+  onDelete,
+  onEdit,
+  onView,
+  filter,
+  setFilter,
+  tags,
+}) {
   const filteredTodos = todos
     .filter((todo) => filter === '全部' || todo.tag === filter)
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const handleBoxClick = (e, todo) => {
+    const target = e.target;
+    if (
+      target.closest('button') ||
+      target.closest('input[type="checkbox"]') ||
+      target.closest('label') ||
+      target.closest('svg')
+    ) {
+      return;
+    }
+    onView(todo);
+  };
 
   return (
     <VStack spacing={3} align="stretch">
@@ -42,35 +72,68 @@ export default function TodoList({ todos, onToggle, onDelete, onEdit, filter, se
           borderRadius="md"
           boxShadow="md"
           bg={todo.complete ? 'gray.100' : 'white'}
+          _hover={{ bg: 'gray.50' }}
+          cursor="pointer"
+          onClick={(e) => handleBoxClick(e, todo)}
         >
-          <HStack justify="space-between" mb={1}>
+          <HStack justify="space-between" mb={2}>
             <Text fontWeight="bold" fontSize="lg" noOfLines={1}>
               {todo.title}
             </Text>
-            <HStack spacing={2}>
-              <Checkbox isChecked={todo.complete} onChange={() => onToggle(todo.id)}>
-                完成
-              </Checkbox>
-              <Button size="sm" colorScheme="teal" onClick={() => onEdit(todo)}>
-                編輯
-              </Button>
-              <Button size="sm" colorScheme="red" onClick={() => onDelete(todo.id)}>
-                刪除
-              </Button>
+            <HStack spacing={1}>
+              <Checkbox
+                isChecked={todo.complete}
+                onClick={(e) => e.stopPropagation()}
+                onChange={() => onToggle(todo.id)}
+              />
+              <Tooltip label="編輯">
+                <IconButton
+                  icon={<FiEdit2 />}
+                  size="sm"
+                  variant="ghost"
+                  colorScheme="teal"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(todo);
+                  }}
+                  aria-label="編輯"
+                />
+              </Tooltip>
+              <Tooltip label="刪除">
+                <IconButton
+                  icon={<FiTrash2 />}
+                  size="sm"
+                  variant="ghost"
+                  colorScheme="red"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(todo.id);
+                  }}
+                  aria-label="刪除"
+                />
+              </Tooltip>
             </HStack>
           </HStack>
-          <Text mb={2} whiteSpace="pre-wrap" color="gray.700" isTruncated >
+
+          <Text mb={2} whiteSpace="pre-wrap" color="gray.700" isTruncated>
             {todo.content || '（無內容）'}
           </Text>
-          <Text fontSize="sm" color="gray.500" mb={1}>
-            建立於：{new Date(todo.created_at).toLocaleString()}
-          </Text>
-          <Text fontSize="sm" color="gray.600" mb={1}>
-            截止日期：{todo.deadline ? new Date(todo.deadline).toLocaleDateString() : '無'}
-          </Text>
+
+          <HStack fontSize="sm" color="gray.500" spacing={4} mb={1}>
+            <HStack spacing={1}>
+              <Icon as={FiCalendar} />
+              <Text>{new Date(todo.created_at).toLocaleString()}</Text>
+            </HStack>
+            <HStack spacing={1}>
+              <Icon as={FiClock} />
+              <Text>{todo.deadline ? new Date(todo.deadline).toLocaleDateString() : '無'}</Text>
+            </HStack>
+          </HStack>
+
           <Text fontSize="xs" color="gray.400" mb={1}>
             最後更新：{new Date(todo.updated_at).toLocaleString()}
           </Text>
+
           <Tag colorScheme={tagColorMap[todo.tag] || 'gray'}>
             <TagLabel>{todo.tag}</TagLabel>
           </Tag>
