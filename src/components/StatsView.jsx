@@ -27,7 +27,7 @@ function getStartOfYear(date) {
   return new Date(date.getFullYear(), 0, 1);
 }
 
-export default function Stats({ todos, tags }) {
+export default function StatsView({ todos, tags }) {
   const [timeRange, setTimeRange] = useState('今日');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
