@@ -1,5 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Heading, Text, Spinner, Center, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, useDisclosure } from '@chakra-ui/react';
+import {
+  Box,
+  Heading,
+  Text,
+  Spinner,
+  Center,
+  useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  useDisclosure,
+} from '@chakra-ui/react';
 import TodoForm from '../components/TodoForm';
 import TodoList from '../components/TodoList';
 import Stats from '../components/Stats';
@@ -27,11 +41,11 @@ export default function Dashboard() {
       setTodos(todos);
       setLoading(false);
     } catch (err) {
-      console.error("取得待辦清單失敗", err);
+      console.error('取得待辦清單失敗', err);
       toast({
-        title: "讀取失敗",
-        description: "無法取得待辦清單資料，請稍後再試。",
-        status: "error",
+        title: '讀取失敗',
+        description: '無法取得待辦清單資料，請稍後再試。',
+        status: 'error',
         duration: 4000,
         isClosable: true,
       });
@@ -44,13 +58,13 @@ export default function Dashboard() {
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setUserName(user.displayName || "親愛的用戶");
+        setUserName(user.displayName || '親愛的用戶');
         await fetchTodos();
       } else {
         toast({
-          title: "尚未登入",
-          description: "請先登入才能使用待辦功能",
-          status: "warning",
+          title: '尚未登入',
+          description: '請先登入才能使用待辦功能',
+          status: 'warning',
           duration: 3000,
           isClosable: true,
         });
@@ -65,20 +79,20 @@ export default function Dashboard() {
       await addTodo(todo);
       await fetchTodos();
     } catch (err) {
-      console.error("新增失敗", err);
+      console.error('新增失敗', err);
     }
   };
 
   const handleToggle = async (id) => {
     try {
-      const updated = todos.map(todo =>
+      const updated = todos.map((todo) =>
         todo.id === id ? { ...todo, complete: !todo.complete } : todo
       );
-      const toggled = updated.find(t => t.id === id);
+      const toggled = updated.find((t) => t.id === id);
       if (toggled) await updateTodo(toggled);
       setTodos(updated);
     } catch (err) {
-      console.error("更新失敗", err);
+      console.error('更新失敗', err);
     }
   };
 
@@ -87,23 +101,20 @@ export default function Dashboard() {
       await deleteTodo(id);
       setTodos((prev) => prev.filter((todo) => todo.id !== id));
     } catch (err) {
-      console.error("刪除失敗", err);
+      console.error('刪除失敗', err);
     }
   };
 
-  // 編輯打開 Modal
   const handleEdit = (todo) => {
     setEditingTodo(todo);
     onOpen();
   };
 
-  // 編輯取消關閉 Modal
   const handleCancelEdit = () => {
     setEditingTodo(null);
     onClose();
   };
 
-  // 編輯提交更新
   const handleUpdateTodo = async (updatedTodo) => {
     try {
       await updateTodo(updatedTodo);
@@ -111,9 +122,22 @@ export default function Dashboard() {
       onClose();
       await fetchTodos();
     } catch (err) {
-      console.error("更新失敗", err);
+      console.error('更新失敗', err);
     }
   };
+
+  // 🔔 找出即將到期的事項（5 天內）
+  const getNearDeadlineTodos = (todos) => {
+    const today = new Date();
+    return todos.filter((todo) => {
+      if (!todo.deadline) return false;
+      const deadline = new Date(todo.deadline);
+      const diffDays = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 && diffDays <= 5 && !todo.complete;
+    });
+  };
+
+  const nearDeadlineTodos = getNearDeadlineTodos(todos);
 
   if (loading) {
     return (
@@ -131,11 +155,29 @@ export default function Dashboard() {
           歡迎回來，{userName}！
         </Text>
       )}
+
+      {/* 🔔 提醒區塊 */}
+      {nearDeadlineTodos.length > 0 && (
+        <Box bg="orange.50" border="1px solid" borderColor="orange.200" borderRadius="md" p={4} mb={4}>
+          <Text fontWeight="bold" mb={2} color="orange.600">
+            ⏰ 以下待辦事項即將到期（5 天內）：
+          </Text>
+          {nearDeadlineTodos.map((todo) => (
+            <Box key={todo.id} mb={2}>
+              <Text fontWeight="medium">{todo.title}</Text>
+              <Text fontSize="sm" color="gray.600">
+                截止日期：{new Date(todo.deadline).toLocaleDateString()}
+              </Text>
+            </Box>
+          ))}
+        </Box>
+      )}
+
       <LayoutSwitcher page={page} setPage={setPage} />
       {page === 'list' && (
         <>
           <TodoForm onAdd={handleAddTodo} tags={tags} />
-          <TodoList  
+          <TodoList
             todos={todos.filter(todo => !todo.complete)}  // 只傳未完成的代辦
             onToggle={handleToggle}
             onDelete={handleDelete}
@@ -164,7 +206,6 @@ export default function Dashboard() {
               />
             )}
           </ModalBody>
-          {/* ModalFooter 留空或移除，因為 TodoForm 內有送出與取消按鈕 */}
         </ModalContent>
       </Modal>
     </Box>
