@@ -1,5 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Input, Textarea, Button, VStack, RadioGroup, Radio, HStack } from '@chakra-ui/react';
+import {
+  Input,
+  Textarea,
+  Button,
+  VStack,
+  RadioGroup,
+  Radio,
+  HStack,
+  FormControl,
+  FormLabel,
+  Box,
+  Icon,
+  Badge,
+  useColorModeValue,
+} from '@chakra-ui/react';
+import { FiCalendar } from 'react-icons/fi';
 import { v4 as uuidv4 } from 'uuid';
 
 const possibleTags = ['工作', '學習', '個人', '其他'];
@@ -10,13 +25,14 @@ const tagColorMap = {
   個人: 'blue',
   其他: 'gray',
 };
+
 export default function TodoForm({
   onAdd,
   initialValues,
   onUpdate,
   onCancel,
   tags = possibleTags,
-  readOnly = false,  // 新增這個 props 控制是否只讀
+  readOnly = false,
 }) {
   const [title, setTitle] = useState(initialValues?.title || '');
   const [content, setContent] = useState(initialValues?.content || '');
@@ -28,8 +44,7 @@ export default function TodoForm({
   );
 
   const handleSubmit = () => {
-    if (readOnly) return;  // 純檢視不送出
-    if (!title.trim()) return;
+    if (readOnly || !title.trim()) return;
 
     const todoData = {
       id: initialValues?.id || uuidv4(),
@@ -66,68 +81,109 @@ export default function TodoForm({
     }
   }, [content]);
 
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+
   return (
-    <VStack spacing={3} align="stretch" mb={6}>
-      <Input
-          placeholder="標題"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          isReadOnly={readOnly}  // 只讀控制
-      />
-      <Textarea
-          placeholder="內容"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onInput={(e) => {
-            const target = e.target;
-            target.style.height = 'auto';
-            target.style.height = `${target.scrollHeight}px`;
-          }}
-          resize="none"
-          overflow="hidden"
-          minH="80px"
-          maxH="300px"
-          ref={textareaRef}
-          isReadOnly={readOnly}  // 只讀
-      />
+    <Box
+      p={6}
+      borderRadius="xl"
+      boxShadow="md"
+      bg={cardBg}
+      border="1px solid"
+      borderColor={borderColor}
+      transition="all 0.3s"
+    >
+      {readOnly && (
+        <Badge colorScheme="yellow" mb={2}>
+          檢視模式
+        </Badge>
+      )}
 
-      <RadioGroup
-        value={tag}
-        onChange={readOnly ? undefined : setTag} // 只讀時不允許改變
-      >
-        <HStack spacing={4}>
-          {tags.map((t) => (
-            <Radio
-              key={t}
-              value={t}
-              colorScheme={tagColorMap[t]}
-              isDisabled={readOnly} // 只讀時禁用
-            >
-              {t}
-            </Radio>
-          ))}
-        </HStack>
-      </RadioGroup>
+      <VStack spacing={4} align="stretch">
+        <FormControl>
+          <FormLabel>標題</FormLabel>
+          <Input
+            placeholder="輸入標題"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            isReadOnly={readOnly}
+          />
+        </FormControl>
 
-      <Input
-        type="date"
-        value={deadline}
-        onChange={(e) => setDeadline(e.target.value)}
-        placeholder="截止日期"
-        isReadOnly={readOnly}
-        pointerEvents={readOnly ? 'none' : 'auto'} // 防止日期選擇器彈出
-      />
+        <FormControl>
+          <FormLabel>內容</FormLabel>
+          <Textarea
+            placeholder="輸入詳細內容..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onInput={(e) => {
+              const target = e.target;
+              target.style.height = 'auto';
+              target.style.height = `${target.scrollHeight}px`;
+            }}
+            resize="none"
+            overflow="hidden"
+            minH="100px"
+            maxH="300px"
+            ref={textareaRef}
+            isReadOnly={readOnly}
+          />
+        </FormControl>
 
-      <HStack spacing={4}>
-        {!readOnly && (onUpdate && initialValues ? (
-          <>
-            <Button colorScheme="blue" onClick={handleSubmit}>更新</Button>
-            <Button onClick={onCancel}>取消</Button>
-          </>
-        ) : (
-          <Button colorScheme="blue" onClick={handleSubmit}>新增</Button>
-        ))}
-      </HStack>
-    </VStack>
+        <FormControl>
+          <FormLabel>分類標籤</FormLabel>
+          <RadioGroup value={tag} onChange={readOnly ? undefined : setTag}>
+            <HStack spacing={4}>
+              {tags.map((t) => (
+                <Radio
+                  key={t}
+                  value={t}
+                  colorScheme={tagColorMap[t]}
+                  isDisabled={readOnly}
+                >
+                  {t}
+                </Radio>
+              ))}
+            </HStack>
+          </RadioGroup>
+        </FormControl>
+
+        <FormControl>
+          <FormLabel>
+            <HStack spacing={2}>
+              <Icon as={FiCalendar} />
+              <span>截止日期</span>
+            </HStack>
+          </FormLabel>
+          <Input
+            type="date"
+            value={deadline}
+            onChange={(e) => setDeadline(e.target.value)}
+            isReadOnly={readOnly}
+            pointerEvents={readOnly ? 'none' : 'auto'}
+          />
+        </FormControl>
+
+        {!readOnly && (
+          <HStack justify="flex-end" pt={2}>
+            {onUpdate && initialValues ? (
+              <>
+                <Button colorScheme="blue" onClick={handleSubmit}>
+                  更新
+                </Button>
+                <Button variant="outline" onClick={onCancel}>
+                  取消
+                </Button>
+              </>
+            ) : (
+              <Button colorScheme="teal" onClick={handleSubmit}>
+                新增
+              </Button>
+            )}
+          </HStack>
+        )}
+      </VStack>
+    </Box>
   );
 }
