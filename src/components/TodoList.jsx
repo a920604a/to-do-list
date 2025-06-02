@@ -18,7 +18,7 @@ const tagColorMap = {
   其他: 'gray',
 };
 
-export default function TodoList({ todos, onToggle, onDelete, filter, setFilter, tags }) {
+export default function TodoList({ todos, onToggle, onDelete, onEdit, filter, setFilter, tags }) {
   const filteredTodos = todos
     .filter((todo) => filter === '全部' || todo.tag === filter)
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -42,7 +42,10 @@ export default function TodoList({ todos, onToggle, onDelete, filter, setFilter,
               <Checkbox isChecked={todo.complete} onChange={() => onToggle(todo.id)}>
                 完成
               </Checkbox>
-              <Button colorScheme="red" size="sm" onClick={() => onDelete(todo.id)}>
+              <Button size="sm" colorScheme="teal" onClick={() => onEdit(todo)}>
+                編輯
+              </Button>
+              <Button size="sm" colorScheme="red" onClick={() => onDelete(todo.id)}>
                 刪除
               </Button>
             </HStack>

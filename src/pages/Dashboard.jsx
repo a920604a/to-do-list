@@ -1,4 +1,3 @@
-// Dashboard.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Heading, Text, Spinner, Center, useToast } from '@chakra-ui/react';
 import TodoForm from '../components/TodoForm';
@@ -16,48 +15,48 @@ export default function Dashboard() {
   const [page, setPage] = useState('list');
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState('');
+  const [editingTodo, setEditingTodo] = useState(null);
   const toast = useToast();
 
   const fetchTodos = useCallback(async () => {
-  try {
-    setLoading(true);
-    const todos = await getAllTodos();
-    setTodos(todos);
-    setLoading(false);
-  } catch (err) {
-    console.error("取得待辦清單失敗", err);
-    toast({
-      title: "讀取失敗",
-      description: "無法取得待辦清單資料，請稍後再試。",
-      status: "error",
-      duration: 4000,
-      isClosable: true,
-    });
-    setLoading(false);
-  }
-}, [toast]);
-
-  useEffect(() => {
-  const auth = getAuth();
-
-  const unsubscribe = onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      setUserName(user.displayName || "親愛的用戶");
-      await fetchTodos();
-    } else {
+    try {
+      setLoading(true);
+      const todos = await getAllTodos();
+      setTodos(todos);
+      setLoading(false);
+    } catch (err) {
+      console.error("取得待辦清單失敗", err);
       toast({
-        title: "尚未登入",
-        description: "請先登入才能使用待辦功能",
-        status: "warning",
-        duration: 3000,
+        title: "讀取失敗",
+        description: "無法取得待辦清單資料，請稍後再試。",
+        status: "error",
+        duration: 4000,
         isClosable: true,
       });
+      setLoading(false);
     }
-  });
+  }, [toast]);
 
-  return () => unsubscribe();
+  useEffect(() => {
+    const auth = getAuth();
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUserName(user.displayName || "親愛的用戶");
+        await fetchTodos();
+      } else {
+        toast({
+          title: "尚未登入",
+          description: "請先登入才能使用待辦功能",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    });
+
+    return () => unsubscribe();
   }, [toast, fetchTodos]);
-
 
   const handleAddTodo = async (todo) => {
     try {
@@ -90,6 +89,27 @@ export default function Dashboard() {
     }
   };
 
+  // 新增：開始編輯
+  const handleEdit = (todo) => {
+    setEditingTodo(todo);
+  };
+
+  // 新增：取消編輯
+  const handleCancelEdit = () => {
+    setEditingTodo(null);
+  };
+
+  // 新增：提交更新
+  const handleUpdateTodo = async (updatedTodo) => {
+    try {
+      await updateTodo(updatedTodo);
+      setEditingTodo(null);
+      await fetchTodos();
+    } catch (err) {
+      console.error("更新失敗", err);
+    }
+  };
+
   if (loading) {
     return (
       <Center h="100vh">
@@ -109,11 +129,21 @@ export default function Dashboard() {
       <LayoutSwitcher page={page} setPage={setPage} />
       {page === 'list' && (
         <>
-          <TodoForm onAdd={handleAddTodo} />
+          {editingTodo ? (
+            <TodoForm
+              initialValues={editingTodo}
+              onUpdate={handleUpdateTodo}
+              onCancel={handleCancelEdit}
+              tags={tags}
+            />
+          ) : (
+            <TodoForm onAdd={handleAddTodo} tags={tags} />
+          )}
           <TodoList
             todos={todos}
             onToggle={handleToggle}
             onDelete={handleDelete}
+            onEdit={handleEdit}
             filter={filter}
             setFilter={setFilter}
             tags={tags}
