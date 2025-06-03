@@ -41,19 +41,23 @@ export async function addTodo(todo) {
     const id = uuidv4(); // 產生新的 UUID
 
     // 處理 deadline，如果無效就設為 10 年後
-    const deadline = todo.deadline && !isNaN(new Date(todo.deadline))
-        ? new Date(todo.deadline).getTime()
+    const deadline = todo.deadline
+        ? (() => {
+            const d = new Date(todo.deadline);
+            return isNaN(d.getTime())
+                ? new Date(new Date().setFullYear(new Date().getFullYear() + 10)).getTime()
+                : d.getTime();
+        })()
         : new Date(new Date().setFullYear(new Date().getFullYear() + 10)).getTime();
-
-
 
     await set(ref(db, `${DB_PATH}/${userId}/${id}`), {
         ...todo,
-        deadline, // ✅ 明確寫入 timestamp
+        deadline,  // 確保存入 timestamp（number）
         created_at: Date.now(),
         updated_at: Date.now(),
-        id,  // 把 id 寫進資料
+        id,
     });
+
     return id;
 }
 
@@ -63,11 +67,32 @@ export async function updateTodo(todo) {
     if (!userId || !todo.id) return;
 
     const db = getDatabase();
+
+    // 轉換時間欄位函式
+    function toTimestamp(time) {
+        if (!time) return null;
+        // 如果是 number 且非 NaN，直接回傳
+        if (typeof time === 'number' && !isNaN(time)) return time;
+        // 如果是 string 或 Date，嘗試轉成時間戳
+        const date = new Date(time);
+        if (!isNaN(date.getTime())) {
+            return date.getTime();
+        }
+        return null;
+    }
+
+    const updated_at = Date.now();
+    const created_at = toTimestamp(todo.created_at) || updated_at; // 如果沒給 created_at 用 updated_at
+    const deadline = toTimestamp(todo.deadline);
+
     const updates = {};
     updates[`${DB_PATH}/${userId}/${todo.id}`] = {
         ...todo,
-        updated_at: Date.now(),
+        created_at,
+        updated_at,
+        deadline,
     };
+
     await update(ref(db), updates);
 }
 
