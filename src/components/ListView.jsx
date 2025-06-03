@@ -22,15 +22,13 @@ import TodoForm from './TodoForm';
 import TodoList from './TodoList';
 import { usePagination } from '../hooks/usePagination';
 
-// 請自行依照實際路徑引入 Firebase 操作函式
 import { addTodo, updateTodo, deleteTodo, getAllTodos } from '../utils/firebaseDb';
 
 export default function ListView({ initialTodos = [], tags }) {
-  /*** 狀態管理 ***/
   const [todos, setTodos] = useState(initialTodos);
   const [filter, setFilter] = useState('全部');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('created_at');
+  const [sortBy, setSortBy] = useState('deadline');
   const [asc, setAsc] = useState(true);
   const [loading, setLoading] = useState(false);
   const [editingTodo, setEditingTodo] = useState(null);
@@ -38,12 +36,10 @@ export default function ListView({ initialTodos = [], tags }) {
 
   const toast = useToast();
 
-  /*** Modal 控制 ***/
   const { isOpen: isAddOpen, onOpen: onAddOpen, onClose: onAddClose } = useDisclosure();
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
   const { isOpen: isViewOpen, onOpen: onViewOpen, onClose: onViewClose } = useDisclosure();
 
-  /*** 資料初始化與刷新 ***/
   useEffect(() => {
     async function fetchTodos() {
       setLoading(true);
@@ -59,9 +55,8 @@ export default function ListView({ initialTodos = [], tags }) {
     fetchTodos();
   }, [toast]);
 
-  /*** 時間解析輔助函式 ***/
   const parseTime = (val) => {
-    if (!val) return 0;
+    if (!val) return Infinity;
     if (val.toDate && typeof val.toDate === 'function') {
       return val.toDate().getTime();
     }
@@ -71,33 +66,39 @@ export default function ListView({ initialTodos = [], tags }) {
     if (typeof val === 'number') {
       return val;
     }
-    return 0;
+    return Infinity;
   };
 
-  /*** 篩選、搜尋、排序邏輯 ***/
   const filteredTodos = useMemo(() => {
     const search = searchTerm.toLowerCase();
     let filtered = todos.filter((todo) => {
       const passFilter = filter === '全部' || todo.tag === filter;
-      const passSearch = !todo.complete &&
-        (todo.title?.toLowerCase().includes(search) ||
-         todo.content?.toLowerCase().includes(search));
+      const passSearch =
+        !todo.complete &&
+        (todo.title?.toLowerCase().includes(search) || todo.content?.toLowerCase().includes(search));
       return passFilter && passSearch;
     });
+    console.log('Filtere todos:', filtered);
 
-    filtered.sort((a, b) => {
+    const sorted = [...filtered].sort((a, b) => {
       const aTime = parseTime(a[sortBy]);
       const bTime = parseTime(b[sortBy]);
+      if (aTime === bTime) {
+        // 假設 id 是 string，使用 localeCompare 排序
+        return asc ? a.id.localeCompare(b.id) : b.id.localeCompare(a.id);
+      }
       return asc ? aTime - bTime : bTime - aTime;
-    });
+    }); 
 
-    return filtered;
+    console.log('sorted todos:', sorted);
+
+    return sorted.slice(); // 確保傳入新的 reference
   }, [todos, searchTerm, filter, sortBy, asc]);
 
-  /*** 分頁 Hook ***/
+
+
   const { currentData, page, maxPage, next, prev } = usePagination(filteredTodos, 5);
 
-  /*** 新增代辦 ***/
   const handleAdd = async (newTodo) => {
     setLoading(true);
     try {
@@ -113,20 +114,16 @@ export default function ListView({ initialTodos = [], tags }) {
     }
   };
 
-  /*** 編輯代辦相關 ***/
-  // 開啟編輯彈窗
   const handleEdit = (todo) => {
     setEditingTodo(todo);
     onEditOpen();
   };
 
-  // 取消編輯
   const handleCancelEdit = () => {
     setEditingTodo(null);
     onEditClose();
   };
 
-  // 更新代辦
   const handleUpdateTodo = async (updatedTodo) => {
     setLoading(true);
     try {
@@ -142,7 +139,6 @@ export default function ListView({ initialTodos = [], tags }) {
     }
   };
 
-  /*** 切換完成狀態 ***/
   const handleToggle = async (id) => {
     setLoading(true);
     try {
@@ -159,7 +155,6 @@ export default function ListView({ initialTodos = [], tags }) {
     }
   };
 
-  /*** 刪除代辦 ***/
   const handleDelete = async (id) => {
     setLoading(true);
     try {
@@ -174,21 +169,17 @@ export default function ListView({ initialTodos = [], tags }) {
     }
   };
 
-  /*** 檢視代辦 ***/
   const handleView = (todo) => {
     setViewingTodo(todo);
     onViewOpen();
   };
 
-  /*** JSX UI ***/
   return (
     <>
-      {/* 新增代辦按鈕 */}
       <Button colorScheme="teal" mb={4} onClick={onAddOpen} isLoading={loading}>
         新增待辦
       </Button>
 
-      {/* 搜尋框 */}
       <InputGroup mb={4}>
         <InputLeftElement pointerEvents="none">
           <SearchIcon color="gray.400" />
@@ -202,7 +193,6 @@ export default function ListView({ initialTodos = [], tags }) {
         />
       </InputGroup>
 
-      {/* 排序與切換升降冪 */}
       <HStack mb={4} spacing={2}>
         <Select
           value={sortBy}
@@ -219,33 +209,28 @@ export default function ListView({ initialTodos = [], tags }) {
         </Button>
       </HStack>
 
-      {/* 代辦列表 */}
       <TodoList
         todos={currentData}
         onToggle={handleToggle}
         onDelete={handleDelete}
         onEdit={handleEdit}
-        onView={handleView} // 檢視功能
+        onView={handleView}
         filter={filter}
         setFilter={setFilter}
         tags={tags}
         isLoading={loading}
       />
 
-      {/* 分頁控制 */}
       <HStack justifyContent="center" spacing={4} mt={4}>
         <Button onClick={prev} disabled={page === 1 || loading}>
           上一頁
         </Button>
-        <Box>
-          第 {page} 頁 / 共 {maxPage} 頁
-        </Box>
+        <Box>第 {page} 頁 / 共 {maxPage} 頁</Box>
         <Button onClick={next} disabled={page === maxPage || loading}>
           下一頁
         </Button>
       </HStack>
 
-      {/* 新增代辦 Modal */}
       <Modal isOpen={isAddOpen} onClose={onAddClose} isCentered>
         <ModalOverlay />
         <ModalContent>
@@ -257,7 +242,6 @@ export default function ListView({ initialTodos = [], tags }) {
         </ModalContent>
       </Modal>
 
-      {/* 編輯代辦 Modal */}
       <Modal isOpen={isEditOpen} onClose={handleCancelEdit} isCentered>
         <ModalOverlay />
         <ModalContent>
@@ -277,7 +261,6 @@ export default function ListView({ initialTodos = [], tags }) {
         </ModalContent>
       </Modal>
 
-      {/* 檢視代辦 Modal */}
       <Modal
         isOpen={isViewOpen}
         onClose={() => {
@@ -296,7 +279,7 @@ export default function ListView({ initialTodos = [], tags }) {
               <TodoForm
                 initialValues={viewingTodo}
                 tags={tags}
-                readOnly={true} // 只讀模式
+                readOnly={true}
               />
             ) : (
               <Box>讀取中...</Box>
