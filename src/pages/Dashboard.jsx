@@ -6,6 +6,7 @@ import {
   Spinner,
   Center,
   useToast,
+  Flex
 } from '@chakra-ui/react';
 import 'react-calendar/dist/Calendar.css';
 
@@ -67,14 +68,31 @@ export default function Dashboard() {
 
 
   const getNearDeadlineTodos = (todos) => {
-    const today = new Date();
-    return todos.filter((todo) => {
-      if (!todo.deadline) return false;
-      const deadline = new Date(todo.deadline);
-      const diffDays = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
-      return diffDays >= 0 && diffDays <= 5 && !todo.complete;
-    });
+  const today = new Date();
+    return todos
+      .filter((todo) => {
+        if (!todo.deadline) return false;
+        const deadline = new Date(todo.deadline);
+        const diffDays = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 && diffDays <= 5 && !todo.complete;
+      })
+      .sort((a, b) => {
+        const aDays = Math.ceil((new Date(a.deadline) - today) / (1000 * 60 * 60 * 24));
+        const bDays = Math.ceil((new Date(b.deadline) - today) / (1000 * 60 * 60 * 24));
+        return aDays - bDays;
+      });
   };
+
+  const getDeadlineColor = (deadline) => {
+    const today = new Date();
+    const d = new Date(deadline);
+    const diffDays = Math.ceil((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) return 'red.500';
+    if (diffDays <= 2) return 'orange.400';
+    return 'yellow.500';
+  };
+
 
   const nearDeadlineTodos = getNearDeadlineTodos(todos);
 
@@ -95,21 +113,40 @@ export default function Dashboard() {
         </Text>
       )}
 
-      {nearDeadlineTodos.length > 0 && (
-        <Box bg="orange.50" border="1px solid" borderColor="orange.200" borderRadius="md" p={4} mb={4}>
-          <Text fontWeight="bold" mb={2} color="orange.600">
-            ⏰ 以下待辦事項即將到期（5 天內）：
-          </Text>
-          {nearDeadlineTodos.map((todo) => (
-            <Box key={todo.id} mb={2}>
-              <Text fontWeight="medium">{todo.title}</Text>
-              <Text fontSize="sm" color="gray.600">
-                截止日期：{new Date(todo.deadline).toLocaleDateString()}
-              </Text>
-            </Box>
-          ))}
+      {nearDeadlineTodos.map((todo) => (
+        <Box
+          key={todo.id}
+          mb={2}
+          p={3}
+          borderLeft="4px solid"
+          borderColor={getDeadlineColor(todo.deadline)}
+          bg="white"
+          borderRadius="md"
+          shadow="sm"
+        >
+          <Text fontWeight="medium">{todo.title}</Text>
+          <Flex justify="space-between" align="center">
+            <Text fontSize="sm" color="gray.600">
+              截止日期：{new Date(todo.deadline).toLocaleDateString()}
+            </Text>
+            <Text
+              fontSize="sm"
+              color={getDeadlineColor(todo.deadline)}
+              fontWeight="bold"
+            >
+              {(() => {
+                const days = Math.ceil((new Date(todo.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+                if (days <= 0) return '🔥 今天到期';
+                if (days <= 2) return '⚠️ 非常緊急';
+                return '⏳ 即將到期';
+              })()}
+            </Text>
+          </Flex>
+
+
         </Box>
-      )}
+      ))}
+
 
       <LayoutSwitcher page={page} setPage={setPage} />
 
