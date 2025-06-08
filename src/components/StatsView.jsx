@@ -4,7 +4,6 @@ import { VStack, Box, Text, useColorModeValue } from '@chakra-ui/react';
 import TimeRangeSelector from './TimeRangeSelector';
 import CategoryCharts from './CategoryCharts';
 import LineChartTrend from './LineChartTrend';
-import DeadlineBarChart from './DeadlineBarChart';
 import CompletionRateChart from './CompletionRateChart';
 
 // 時間區間輔助函式
@@ -130,10 +129,6 @@ export default function StatsView({ todos, tags }) {
     }
   });
 
-  const deadlineChartData = Object.entries(deadlineDistribution).map(([date, count]) => ({
-    date,
-    count,
-  }));
 
   // 產生日期範圍（用於折線圖）
   const generateDateRange = () => {
@@ -233,7 +228,6 @@ export default function StatsView({ todos, tags }) {
 
       <CompletionRateChart completedCount={completedCount} totalCount={filteredTodos.length} />
       <LineChartTrend data={lineData} timeRange={timeRange} />
-      {/* <DeadlineBarChart data={deadlineChartData} /> */}
     </VStack>
   );
 }
