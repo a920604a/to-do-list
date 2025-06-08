@@ -4,7 +4,6 @@ import { VStack, Box, Text, useColorModeValue } from '@chakra-ui/react';
 import TimeRangeSelector from './TimeRangeSelector';
 import CategoryCharts from './CategoryCharts';
 import LineChartTrend from './LineChartTrend';
-import DeadlineBarChart from './DeadlineBarChart';
 import CompletionRateChart from './CompletionRateChart';
 
 // 時間區間輔助函式
@@ -30,10 +29,12 @@ function getStartOfYear(date) {
 }
 
 export default function StatsView({ todos, tags }) {
-  const [timeRange, setTimeRange] = useState('今日');
+  const [timeRange, setTimeRange] = useState('本週');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const [filteredTodos, setFilteredTodos] = useState(todos);
+  const [startDate, setStartDate] = useState(null);
+  const [endDateState, setEndDateState] = useState(null);
 
   useEffect(() => {
     const now = new Date();
@@ -41,9 +42,6 @@ export default function StatsView({ todos, tags }) {
     let endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
     switch (timeRange) {
-      case '今日':
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        break;
       case '本週':
         startDate = getStartOfWeek(now);
         break;
@@ -72,27 +70,38 @@ export default function StatsView({ todos, tags }) {
         return;
     }
 
+    setStartDate(startDate);
+    setEndDateState(endDate);
+
     setFilteredTodos(
       todos.filter(todo => {
-        const cDate = new Date(todo.created_at);
-        return cDate >= startDate && cDate <= endDate;
+        // 如果要以deadline判斷區間：
+        if (!todo.deadline) return false;  // 沒 deadline 的不算
+
+        const dDate = new Date(todo.deadline);
+        return dDate >= startDate && dDate <= endDate;
       })
     );
+
   }, [timeRange, customStart, customEnd, todos]);
 
+  // 統計分類標籤數量
   const data = tags.map(tag => ({
     name: tag,
     value: filteredTodos.filter(t => t.tag === tag).length,
   }));
 
+  // 已完成任務數
   const completedCount = filteredTodos.filter(t => t.complete).length;
 
   const now = new Date();
 
-  // 額外統計分析
+  // 提醒任務數（alert = true）
   const alertCount = filteredTodos.filter(t => t.alert === true).length;
 
+  // 即將到期任務（3 天內且未完成）
   const soonDeadlineTodos = filteredTodos.filter(t => {
+    if (!t.deadline) return false;
     const deadline = new Date(t.deadline);
     return (
       !t.complete &&
@@ -101,14 +110,17 @@ export default function StatsView({ todos, tags }) {
     );
   });
 
+  // 逾期未完成任務（deadline 在現在之前且未完成）
   const overdueTodos = filteredTodos.filter(t => {
+    if (!t.deadline || t.complete) return false; // 無 deadline 或已完成的不算逾期未完成
     const deadline = new Date(t.deadline);
-    return !t.complete && deadline < now;
+    return deadline < now;
   });
 
+  // 日期格式化
   const formatDate = date => `${date.getMonth() + 1}/${date.getDate()}`;
 
-  // deadline 分布圖表資料
+  // 截取期限分布統計
   const deadlineDistribution = {};
   filteredTodos.forEach(todo => {
     if (todo.deadline) {
@@ -117,20 +129,13 @@ export default function StatsView({ todos, tags }) {
     }
   });
 
-  const deadlineChartData = Object.entries(deadlineDistribution).map(([date, count]) => ({
-    date,
-    count,
-  }));
 
+  // 產生日期範圍（用於折線圖）
   const generateDateRange = () => {
     let start, end;
     const now = new Date();
 
     switch (timeRange) {
-      case '今日':
-        start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        end = new Date(start);
-        break;
       case '本週':
         start = getStartOfWeek(now);
         end = now;
@@ -171,6 +176,7 @@ export default function StatsView({ todos, tags }) {
 
   const pastDays = generateDateRange();
 
+  // 折線圖資料：每天新增任務數
   const lineData = pastDays.map(day => {
     const count = filteredTodos.filter(todo => {
       const cDate = new Date(todo.created_at);
@@ -198,6 +204,12 @@ export default function StatsView({ todos, tags }) {
         <Text fontSize="md" color="teal.500">🔔 提醒任務：{alertCount} / {filteredTodos.length}</Text>
         <Text fontSize="md" color="orange.500">⚠️ 即將到期任務：{soonDeadlineTodos.length}</Text>
         <Text fontSize="md" color="red.500">❗ 逾期未完成任務：{overdueTodos.length}</Text>
+
+        {startDate && endDateState && (
+          <Text fontSize="sm" color="gray.500" mt={2}>
+            資料範圍：{startDate.toLocaleDateString()} ~ {endDateState.toLocaleDateString()}
+          </Text>
+        )}
       </Box>
 
       <Box p={6} bg={bgCard} rounded="md" boxShadow="md">
@@ -213,10 +225,9 @@ export default function StatsView({ todos, tags }) {
         />
         <CategoryCharts data={data} />
       </Box>
-      <CompletionRateChart completedCount={completedCount} totalCount={filteredTodos.length} />
 
+      <CompletionRateChart completedCount={completedCount} totalCount={filteredTodos.length} />
       <LineChartTrend data={lineData} timeRange={timeRange} />
-      <DeadlineBarChart data={deadlineChartData} />
     </VStack>
   );
 }

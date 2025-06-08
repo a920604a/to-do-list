@@ -14,7 +14,7 @@ export default function TimeRangeSelector({
   return (
     <>
       <HStack mb={4} justifyContent="center" spacing={2}>
-        {['今日', '本週', '本月', '本季', '今年', '自訂'].map((label) => (
+        {['本週', '本月', '本季', '今年', '自訂'].map((label) => (
           <Button
             key={label}
             size="sm"
