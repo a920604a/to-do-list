@@ -12,6 +12,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  ResponsiveContainer,
 } from 'recharts';
 
 export default function LineChartTrend({ data, timeRange }) {
@@ -21,6 +22,8 @@ export default function LineChartTrend({ data, timeRange }) {
       bg={useColorModeValue('gray.50', 'gray.700')}
       rounded="md"
       boxShadow="md"
+      maxW="100%"
+      overflowX="auto"
     >
       <Text
         fontSize="xl"
@@ -31,25 +34,27 @@ export default function LineChartTrend({ data, timeRange }) {
         新增任務趨勢 ({timeRange})
       </Text>
 
-      <LineChart
-        width={350}
-        height={250}
-        data={data}
-        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" />
-        <YAxis allowDecimals={false} />
-        <Tooltip />
-        <Legend />
-        <Line
-          type="monotone"
-          dataKey="count"
-          stroke="#d69e2e"
-          strokeWidth={3}
-          activeDot={{ r: 8 }}
-        />
-      </LineChart>
+      <Box width="100%" height="250px">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={data}
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="count"
+              stroke="#d69e2e"
+              strokeWidth={3}
+              activeDot={{ r: 8 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </Box>
     </Box>
   );
 }

@@ -1,16 +1,21 @@
 import React from 'react';
-import { Box, Text, List, ListItem, Badge, useColorModeValue } from '@chakra-ui/react';
+import { Box, Text, List, ListItem, Badge, useColorModeValue, useBreakpointValue } from '@chakra-ui/react';
 
 export default function CompletedTodoList({ completedTodos, visibleCount, onScroll }) {
-  // **Hook 必須在函式最上方無條件呼叫**
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const hoverBgColor = useColorModeValue('gray.50', 'gray.700');
   const scrollBarThumbColor = useColorModeValue('#a0aec0', '#718096');
   const bgColor = useColorModeValue('white', 'gray.800');
 
+  // 動態調整字體大小與 padding
+  const fontSize = useBreakpointValue({ base: 'sm', md: 'md' });
+  const paddingY = useBreakpointValue({ base: 2, md: 3 });
+
   return (
     <Box
       maxH="400px"
+      maxW="600px"
+      w="100%"
       overflowY="auto"
       onScroll={onScroll}
       border="1px solid"
@@ -19,6 +24,7 @@ export default function CompletedTodoList({ completedTodos, visibleCount, onScro
       p={4}
       bg={bgColor}
       boxShadow="sm"
+      mx="auto"
       css={{
         '&::-webkit-scrollbar': { width: '8px' },
         '&::-webkit-scrollbar-thumb': {
@@ -27,7 +33,15 @@ export default function CompletedTodoList({ completedTodos, visibleCount, onScro
         },
       }}
     >
-      <Text fontSize="lg" fontWeight="bold" mb={4} borderBottom="1px solid" borderColor={borderColor} pb={2}>
+      <Text
+        fontSize="lg"
+        fontWeight="bold"
+        mb={4}
+        borderBottom="1px solid"
+        borderColor={borderColor}
+        pb={2}
+        textAlign="center"
+      >
         已完成任務列表
       </Text>
 
@@ -48,12 +62,13 @@ export default function CompletedTodoList({ completedTodos, visibleCount, onScro
                 key={todo.id}
                 borderBottom="1px solid"
                 borderColor={borderColor}
-                py={3}
+                py={paddingY}
                 _hover={{ bg: hoverBgColor, cursor: 'pointer' }}
                 rounded="md"
                 transition="background-color 0.2s"
+                fontSize={fontSize}
               >
-                <Text fontWeight="semibold" fontSize="md" mb={1}>{todo.title}</Text>
+                <Text fontWeight="semibold" fontSize={fontSize} mb={1}>{todo.title}</Text>
                 <Text fontSize="sm" color="gray.500" mb={1}>
                   完成時間: {todo.updated_at ? new Date(todo.updated_at).toLocaleString() : '未知'}
                 </Text>
