@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Box,
   Text,
+  useColorModeValue
 } from '@chakra-ui/react';
 import {
   LineChart,
@@ -17,7 +18,7 @@ export default function LineChartTrend({ data, timeRange }) {
   return (
     <Box
       p={4}
-      bg="inherit"
+      bg={useColorModeValue('gray.50', 'gray.700')}
       rounded="md"
       boxShadow="md"
     >

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { VStack, Box, Text, useColorModeValue } from '@chakra-ui/react';
-import { Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, List, ListItem, Badge } from '@chakra-ui/react';
 
 import TimeRangeSelector from './TimeRangeSelector';
 import CategoryCharts from './CategoryCharts';
 import LineChartTrend from './LineChartTrend';
 import CompletionRateChart from './CompletionRateChart';
+import CompletedTodoList from './CompletedTodoList';  // 引入新元件
 
 import useStatsView from '../hooks/useStatsView';
 
@@ -29,7 +29,17 @@ export default function StatsView({ todos, tags }) {
   const bgCard = useColorModeValue('gray.50', 'gray.700');
   const btnActive = useColorModeValue('blue.500', 'blue.300');
   const btnInactive = useColorModeValue('gray.300', 'gray.600');
+  const [visibleCount, setVisibleCount] = React.useState(20);
 
+  const completedTodos = filteredTodos.filter(t => t.complete);
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollHeight - scrollTop - clientHeight < 50) {
+      // 距離底部小於50px時載入更多
+      setVisibleCount((count) => Math.min(count + 20, completedTodos.length));
+    }
+  };
   return (
     <VStack spacing={8} align="stretch" maxW="900px" mx="auto" px={6} py={6}>
       <Box p={6} bg={bgCard} rounded="md" boxShadow="md" textAlign="center">
@@ -65,35 +75,14 @@ export default function StatsView({ todos, tags }) {
 
       <CompletionRateChart completedCount={completedCount} totalCount={filteredTodos.length} />
       <LineChartTrend data={lineData} timeRange={timeRange} />
-      <Accordion allowToggle>
-        <AccordionItem>
-          <AccordionButton>
-            <Box flex="1" textAlign="left" fontWeight="bold">
-              已完成任務詳細列表 ({completedCount})
-            </Box>
-            <AccordionIcon />
-          </AccordionButton>
-          <AccordionPanel pb={4} maxH="300px" overflowY="auto">
-            {completedCount === 0 ? (
-              <Text>無已完成任務</Text>
-            ) : (
-              <List spacing={3}>
-                {filteredTodos
-                  .filter(t => t.complete)
-                  .map(todo => (
-                    <ListItem key={todo.id} borderBottom="1px solid" borderColor="gray.200" py={2}>
-                      <Text fontWeight="medium">{todo.title}</Text>
-                      <Text fontSize="sm" color="gray.500">
-                        完成時間: {todo.updated_at ? new Date(todo.updated_at).toLocaleString() : '未知'}
-                      </Text>
-                      <Badge colorScheme="blue">{todo.tag}</Badge>
-                    </ListItem>
-                  ))}
-              </List>
-            )}
-          </AccordionPanel>
-        </AccordionItem>
-      </Accordion>
+ 
+      
+      <CompletedTodoList
+        completedTodos={completedTodos || []}
+        visibleCount={visibleCount}
+        onScroll={handleScroll}
+      />
+
     </VStack>
   );
 }

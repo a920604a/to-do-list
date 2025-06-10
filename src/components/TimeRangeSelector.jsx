@@ -11,6 +11,8 @@ export default function TimeRangeSelector({
   btnActive,
   btnInactive,
 }) {
+  const isDateError = customStart && customEnd && customEnd < customStart;
+
   return (
     <>
       <HStack mb={4} justifyContent="center" spacing={2}>
@@ -32,31 +34,39 @@ export default function TimeRangeSelector({
       </HStack>
 
       {timeRange === '自訂' && (
-        <HStack spacing={3} mb={4} justifyContent="center">
-          <Box>
-            <Text fontSize="sm" mb={1} textAlign="center">
-              開始日期
+        <>
+          <HStack spacing={3} mb={2} justifyContent="center">
+            <Box>
+              <Text fontSize="sm" mb={1} textAlign="center">
+                開始日期
+              </Text>
+              <Input
+                type="date"
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+                max={customEnd || undefined}
+              />
+            </Box>
+            <Box>
+              <Text fontSize="sm" mb={1} textAlign="center">
+                結束日期
+              </Text>
+              <Input
+                type="date"
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                min={customStart || undefined}
+                max={new Date().toISOString().split('T')[0]}
+              />
+            </Box>
+          </HStack>
+
+          {isDateError && (
+            <Text color="red.500" fontSize="sm" textAlign="center" mb={4}>
+              結束日期不可早於開始日期
             </Text>
-            <Input
-              type="date"
-              value={customStart}
-              onChange={(e) => setCustomStart(e.target.value)}
-              max={customEnd || undefined}
-            />
-          </Box>
-          <Box>
-            <Text fontSize="sm" mb={1} textAlign="center">
-              結束日期
-            </Text>
-            <Input
-              type="date"
-              value={customEnd}
-              onChange={(e) => setCustomEnd(e.target.value)}
-              min={customStart || undefined}
-              max={new Date().toISOString().split('T')[0]}
-            />
-          </Box>
-        </HStack>
+          )}
+        </>
       )}
     </>
   );
