@@ -205,8 +205,9 @@ export default function ListView({ initialTodos = [], tags }) {
           <option value="deadline">截止時間</option>
         </Select>
         <Button onClick={() => setAsc((prev) => !prev)} size="sm" isDisabled={loading}>
-          {asc ? '升冪' : '降冪'}
+          {asc ? '由舊到新' : '由新到舊'}
         </Button>
+
       </HStack>
 
       <TodoList
