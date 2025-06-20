@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
-  Heading,
   Text,
   Spinner,
   Center,
@@ -15,6 +14,8 @@ import StatsView from '../components/StatsView';
 import CalendarView from '../components/CalendarView';
 import ListView from '../components/ListView';
 import LayoutSwitcher from '../components/LayoutSwitcher';
+import TopBar from "../components/TopBar";
+
 
 import { getAllTodos} from '../utils/firebaseDb';
 import { auth } from '../utils/firebase';
@@ -24,11 +25,9 @@ import { useAuth } from '../contexts/AuthContext';
 const tags = ['工作', '學習', '個人', '其他'];
 
 export default function Dashboard() {
-    const navigate = useNavigate();
-    const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const [userId, setUserId] = useState(null);
-    const [loadingUser, setLoadingUser] = useState(true);
   const [todos, setTodos] = useState([]);
   const [page, setPage] = useState('list'); // 預覽模式：list, stats, calendar
   const [loading, setLoading] = useState(false);
@@ -54,38 +53,19 @@ export default function Dashboard() {
     }
   }, [toast]);
 
-  // useEffect(() => {
-  //   // const auth = getAuth();
-  //   const unsubscribe = onAuthStateChanged(auth, async (user) => {
-  //     if (user) {
-  //       setUserName(user.displayName || '親愛的用戶');
-  //       await fetchTodos();
-  //     } else {
-  //       toast({
-  //         title: '尚未登入',
-  //         description: '請先登入才能使用待辦功能',
-  //         status: 'warning',
-  //         duration: 3000,
-  //         isClosable: true,
-  //       });
-  //     }
-  //   });
 
-  //   return () => unsubscribe();
-  // }, [toast, fetchTodos]);
   // 登入狀態監聽
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setUserId(user.uid);
-            } else {
-                setUserId(null);
-                navigate('/');
-            }
-            setLoadingUser(false);
-        });
-        return () => unsubscribe();
-    }, [user, navigate]);
+  useEffect(() => {
+      const unsubscribe = onAuthStateChanged(auth,async  (user) => {
+          if (user) {
+              setUserName(user.displayName || '親愛的用戶');
+              await fetchTodos();
+          } else {
+              navigate('/');
+          }
+      });
+      return () => unsubscribe();
+  }, [user, navigate, fetchTodos]);
 
 
   const getNearDeadlineTodos = (todos) => {
@@ -127,7 +107,10 @@ export default function Dashboard() {
 
   return (
     <Box p={5} maxW="600px" mx="auto">
-      <Heading mb={2}>代辦清單</Heading>
+      <TopBar 
+        backButtonText="查看習慣統計" 
+        onBackClick={() => navigate('/statistics')} 
+      />
       {userName && (
         <Text fontSize="md" color="gray.600" mb={4}>
           歡迎回來，{userName}！

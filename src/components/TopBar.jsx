@@ -1,12 +1,11 @@
 // components/TopBar.jsx
 import React from "react";
-import { Flex, Button } from "@chakra-ui/react";
+import {
+  Heading, Flex
+} from '@chakra-ui/react';
 import LogoutButton from "./LogoutButton";
 
-const TopBar = ({ 
-  backButtonText = "返回儀表板", 
-  onBackClick = () => {} 
-}) => {
+const TopBar = () => {
   return (
     <Flex
       as="header"
@@ -16,10 +15,10 @@ const TopBar = ({
       bg="gray.100"
       boxShadow="md"
     >
-      <Button colorScheme="blue" onClick={onBackClick}>
-        {backButtonText}
-      </Button>
+      <Heading mb={2}>代辦清單</Heading>
+    
       <LogoutButton />
+
     </Flex>
   );
 };
