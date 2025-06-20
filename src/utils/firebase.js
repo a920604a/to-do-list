@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -21,6 +21,19 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+
+// ✅ 設定持久化登入：保留登入狀態在 localStorage
+setPersistence(auth, browserLocalPersistence)
+    .then(() => {
+        console.log("Firebase 已設定為 localStorage 持久化登入");
+    })
+    .catch((error) => {
+        console.error("設定持久化登入失敗：", error);
+    });
+
+
+
 const provider = new GoogleAuthProvider();
 
 export { auth, provider, signInWithPopup };
